@@ -29,47 +29,47 @@ total_autonomas = 0
 # -----------------------------
 for i in range(int(num_asignaturas)):
     for i in range(int(num_asignaturas)):
-    st.subheader(f"Asignatura {i+1}")
-
-    col1, col2, col3 = st.columns([4, 1, 1])
-
-    with col1:
-        nombre = st.text_input(
-            "Asignatura",
-            key=f"nombre_{i}"
-        )
-
-    with col2:
-        creditos = st.number_input(
-            "Créditos",
-            min_value=1,
-            max_value=10,
-            step=1,
-            key=f"creditos_{i}"
-        )
-
-    with col3:
-        nota = st.number_input(
-            "Nota",
-            min_value=0.0,
-            max_value=5.0,
-            step=0.1,
-            key=f"nota_{i}"
-        )
-
-    horas_presenciales = creditos
-    horas_autonomas = (creditos * 3) - creditos
-
-    total_presenciales += horas_presenciales
-    total_autonomas += horas_autonomas
-
-    datos.append({
-        "Asignatura": nombre,
-        "Créditos": creditos,
-        "Nota": nota,
-        "Horas Presenciales": horas_presenciales,
-        "Horas Autónomas": horas_autonomas
-    })
+        st.subheader(f"Asignatura {i+1}")
+    
+        col1, col2, col3 = st.columns([4, 1, 1])
+    
+        with col1:
+            nombre = st.text_input(
+                "Asignatura",
+                key=f"nombre_{i}"
+            )
+    
+        with col2:
+            creditos = st.number_input(
+                "Créditos",
+                min_value=1,
+                max_value=10,
+                step=1,
+                key=f"creditos_{i}"
+            )
+    
+        with col3:
+            nota = st.number_input(
+                "Nota",
+                min_value=0.0,
+                max_value=5.0,
+                step=0.1,
+                key=f"nota_{i}"
+            )
+    
+        horas_presenciales = creditos
+        horas_autonomas = (creditos * 3) - creditos
+    
+        total_presenciales += horas_presenciales
+        total_autonomas += horas_autonomas
+    
+        datos.append({
+            "Asignatura": nombre,
+            "Créditos": creditos,
+            "Nota": nota,
+            "Horas Presenciales": horas_presenciales,
+            "Horas Autónomas": horas_autonomas
+        })
 
 # -----------------------------
 # TABLA RESUMEN
