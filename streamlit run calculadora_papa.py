@@ -108,6 +108,46 @@ if len(df) > 0:
         st.warning("No hay créditos válidos.")
 
 # -----------------------------------
+# SUGERENCIAS ACADÉMICAS
+# -----------------------------------
+st.subheader("Sugerencias Académicas")
+
+if suma_creditos > 0:
+    
+    if papa < 3.0:
+        st.error("Actualmente estás en zona de riesgo académico.")
+
+    elif papa < 3.4:
+        st.warning("Estás en zona de alerta. Lo ideal es alcanzar 3.4 o más.")
+
+    else:
+        st.success("Tu promedio está en una zona estable.")
+
+    sugerencias = []
+
+    for index, row in df.iterrows():
+        nota_actual = row["Nota"]
+
+        if nota_actual < 3.5:
+            for meta_nota in [3.0, 3.5, 4.0]:
+                if meta_nota > nota_actual:
+                    nuevo_total = suma_ponderada - (nota_actual * row["Créditos"]) + (meta_nota * row["Créditos"])
+                    nuevo_papa = nuevo_total / suma_creditos
+
+                    if nuevo_papa >= 3.0:
+                        sugerencias.append(
+                            f"Si subes **{row['Asignatura']}** de {nota_actual} a {meta_nota}, "
+                            f"tu P.A.P.A. sería aproximadamente **{round(nuevo_papa,2)}**."
+                        )
+                        break
+
+    if sugerencias:
+        for s in sugerencias:
+            st.markdown(f"- {s}")
+    else:
+        st.info("No se encontraron ajustes relevantes.")
+
+# -----------------------------------
 # CARGA HORARIA
 # -----------------------------------
 st.subheader("Carga Horaria Total")
