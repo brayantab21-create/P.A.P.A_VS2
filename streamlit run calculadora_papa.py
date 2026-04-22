@@ -91,11 +91,11 @@ for i in range(int(num_asignaturas)):
 # -----------------------------------
 df = pd.DataFrame(datos)
 
+# eliminar índice visible
+df.index = [""] * len(df)
+
 st.subheader("Resumen Académico")
-st.dataframe(
-    df.style.hide(axis="index"),
-    width="stretch"
-)
+st.dataframe(df, width="stretch")
 
 # -----------------------------------
 # CÁLCULO DEL P.A.P.A.
