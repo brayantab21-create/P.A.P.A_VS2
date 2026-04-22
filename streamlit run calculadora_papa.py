@@ -28,25 +28,34 @@ total_autonomas = 0
 # INGRESO DE DATOS
 # -----------------------------
 for i in range(int(num_asignaturas)):
+    for i in range(int(num_asignaturas)):
     st.subheader(f"Asignatura {i+1}")
 
-    nombre = st.text_input(f"Nombre de la asignatura {i+1}", key=f"nombre_{i}")
+    col1, col2, col3 = st.columns([4, 1, 1])
 
-    creditos = st.number_input(
-        f"Créditos",
-        min_value=1,
-        max_value=10,
-        step=1,
-        key=f"creditos_{i}"
-    )
+    with col1:
+        nombre = st.text_input(
+            "Asignatura",
+            key=f"nombre_{i}"
+        )
 
-    nota = st.number_input(
-        f"Nota numérica",
-        min_value=0.0,
-        max_value=5.0,
-        step=0.1,
-        key=f"nota_{i}"
-    )
+    with col2:
+        creditos = st.number_input(
+            "Créditos",
+            min_value=1,
+            max_value=10,
+            step=1,
+            key=f"creditos_{i}"
+        )
+
+    with col3:
+        nota = st.number_input(
+            "Nota",
+            min_value=0.0,
+            max_value=5.0,
+            step=0.1,
+            key=f"nota_{i}"
+        )
 
     horas_presenciales = creditos
     horas_autonomas = (creditos * 3) - creditos
