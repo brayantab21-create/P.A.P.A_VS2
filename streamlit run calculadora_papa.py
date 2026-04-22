@@ -77,7 +77,7 @@ for i in range(int(num_asignaturas)):
     })
 
 # -----------------------------------
-# DATAFRAME
+# TABLA RESUMEN
 # -----------------------------------
 df = pd.DataFrame(datos)
 
@@ -111,10 +111,31 @@ with colB:
     st.metric("Horas Autónomas", total_autonomas)
 
 # -----------------------------------
-# FÓRMULAS
+# EXPLICACIÓN DEL CÁLCULO
 # -----------------------------------
-st.subheader("Fórmulas aplicadas")
+st.subheader("¿Cómo se realizan los cálculos?")
 
-st.latex(r"P.A.P.A. = \frac{\sum (Créditos_i \cdot Nota_i)}{\sum Créditos_i}")
-st.latex(r"Horas\ Presenciales = Créditos")
-st.latex(r"Horas\ Autónomas = (Créditos \times 3) - Créditos")
+st.markdown("""
+**Cálculo del P.A.P.A.:**  
+El sistema multiplica la nota obtenida en cada asignatura por la cantidad de créditos que esta tiene.  
+Luego suma todos esos resultados y los divide entre el total de créditos matriculados.
+
+Esto permite que las materias con más créditos tengan mayor peso en el promedio.
+
+**Cálculo de horas presenciales:**  
+Cada crédito equivale a **1 hora presencial semanal**.  
+Por ejemplo, una asignatura de 4 créditos representa 4 horas presenciales.
+
+**Cálculo de horas autónomas:**  
+Cada crédito equivale a **3 horas de trabajo total semanal**.  
+De esas 3 horas:
+
+- 1 hora corresponde a trabajo presencial.
+- 2 horas corresponden a trabajo autónomo.
+
+Ejemplo:
+
+- 4 créditos = 12 horas totales  
+- 4 horas presenciales  
+- 8 horas autónomas  
+""")
