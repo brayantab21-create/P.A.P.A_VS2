@@ -216,8 +216,8 @@ st.markdown(
     <b>Cálculo de horas autónomas:</b><br>
     Cada crédito equivale a <b>3 horas de trabajo total semanal</b>.<br>
     De esas 3 horas:<br>
-    - 1 hora corresponde a trabajo presencial.<br>
-    - 2 horas corresponden a trabajo autónomo.<br><br>
+    1 hora corresponde a trabajo presencial.<br>
+    2 horas corresponden a trabajo autónomo.<br><br>
 
     <b>Ejemplo:</b><br>
     4 créditos = 12 horas totales<br>
