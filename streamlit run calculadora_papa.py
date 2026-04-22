@@ -108,6 +108,33 @@ if len(df) > 0:
         st.warning("No hay créditos válidos.")
 
 # -----------------------------------
+# ALERTAS INSTITUCIONALES
+# -----------------------------------
+st.subheader("Estado Académico")
+
+if papa <= 2.6:
+    st.error(
+        "Debes hacer reingreso por el Consejo Superior Universitario. "
+        "Revisa las fechas y orientaciones para la solicitud."
+    )
+
+elif papa >= 2.7 and papa < 3.0:
+    st.warning(
+        "Debes hacer reingreso por el Consejo de Facultad. "
+        "Revisa las fechas y orientaciones para la solicitud."
+    )
+
+elif papa >= 3.0 and papa < 3.4:
+    st.info(
+        "Tu promedio está en zona de alerta. Se recomienda fortalecer las asignaturas con bajo rendimiento."
+    )
+
+else:
+    st.success(
+        "Tu promedio se encuentra en una zona estable."
+    )
+
+# -----------------------------------
 # SUGERENCIAS ACADÉMICAS
 # -----------------------------------
 st.subheader("Sugerencias Académicas")
