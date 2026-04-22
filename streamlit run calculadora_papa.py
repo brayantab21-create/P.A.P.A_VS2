@@ -6,8 +6,18 @@ import pandas as pd
 # -----------------------------------
 st.set_page_config(page_title="Calculadora Académica", layout="wide")
 
-st.title("Calculadora Académica")
-st.caption("Cálculo de P.A.P.A. y carga horaria")
+# -----------------------------------
+# TÍTULO CENTRADO
+# -----------------------------------
+st.markdown(
+    """
+    <h1 style='text-align: center;'>Calculadora Académica</h1>
+    <p style='text-align: center; font-size:18px;'>
+        Cálculo de P.A.P.A. y carga horaria
+    </p>
+    """,
+    unsafe_allow_html=True
+)
 
 # -----------------------------------
 # CANTIDAD DE ASIGNATURAS
@@ -111,31 +121,40 @@ with colB:
     st.metric("Horas Autónomas", total_autonomas)
 
 # -----------------------------------
-# EXPLICACIÓN DEL CÁLCULO
+# EXPLICACIÓN CENTRADA
 # -----------------------------------
-st.subheader("¿Cómo se realizan los cálculos?")
+st.markdown(
+    """
+    <h2 style='text-align: center;'>¿Cómo se realizan los cálculos?</h2>
+    """,
+    unsafe_allow_html=True
+)
 
-st.markdown("""
-**Cálculo del P.A.P.A.:**  
-El sistema multiplica la nota obtenida en cada asignatura por la cantidad de créditos que esta tiene.  
-Luego suma todos esos resultados y los divide entre el total de créditos matriculados.
+st.markdown(
+    """
+    <div style='text-align: center; font-size:16px;'>
 
-Esto permite que las materias con más créditos tengan mayor peso en el promedio.
+    <b>Cálculo del P.A.P.A.:</b><br>
+    El sistema multiplica la nota obtenida en cada asignatura por la cantidad de créditos.<br>
+    Luego suma todos esos resultados y los divide entre el total de créditos matriculados.<br><br>
 
-**Cálculo de horas presenciales:**  
-Cada crédito equivale a **1 hora presencial semanal**.  
-Por ejemplo, una asignatura de 4 créditos representa 4 horas presenciales.
+    Esto permite que las materias con más créditos tengan mayor peso en el promedio.<br><br>
 
-**Cálculo de horas autónomas:**  
-Cada crédito equivale a **3 horas de trabajo total semanal**.  
-De esas 3 horas:
+    <b>Cálculo de horas presenciales:</b><br>
+    Cada crédito equivale a <b>1 hora presencial semanal</b>.<br><br>
 
-- 1 hora corresponde a trabajo presencial.
-- 2 horas corresponden a trabajo autónomo.
+    <b>Cálculo de horas autónomas:</b><br>
+    Cada crédito equivale a <b>3 horas de trabajo total semanal</b>.<br>
+    De esas 3 horas:<br>
+    - 1 hora corresponde a trabajo presencial.<br>
+    - 2 horas corresponden a trabajo autónomo.<br><br>
 
-Ejemplo:
+    <b>Ejemplo:</b><br>
+    4 créditos = 12 horas totales<br>
+    4 horas presenciales<br>
+    8 horas autónomas
 
-- 4 créditos = 12 horas totales  
-- 4 horas presenciales  
-- 8 horas autónomas  
-""")
+    </div>
+    """,
+    unsafe_allow_html=True
+)
