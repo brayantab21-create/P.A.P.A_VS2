@@ -226,7 +226,7 @@ st.markdown(
 
     <b>Nota:</b><br>
     Si trabajas, tienes ocupaciones o demás situaciones que generen dificultad para organizar tu horario <br>
-    acude acompañamiento académico para trazar un plan.
+    <b> acude acompañamiento académico </b> para trazar un plan.
     
     </div>
     """,
