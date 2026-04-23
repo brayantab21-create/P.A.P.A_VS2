@@ -224,6 +224,10 @@ st.markdown(
     4 horas presenciales<br>
     8 horas autónomas
 
+    <b>Nota:</b><br>
+    Si trabajas, tienes ocupaciones o demás situaciones que generen dificultad para organizar tu horario <br>
+    acude acompañamiento académico para trazar un plan.
+    
     </div>
     """,
     unsafe_allow_html=True
