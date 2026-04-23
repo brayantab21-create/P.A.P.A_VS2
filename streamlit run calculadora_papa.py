@@ -115,7 +115,7 @@ if len(df) > 0:
 # -----------------------------------
 st.subheader("Estado Académico")
 
-if papa <= 2.6:
+if papa < 2.7:
     st.error(
         "Debes hacer reingreso por el Consejo Superior Universitario. "
         "Revisa las fechas y orientaciones para la solicitud."
