@@ -211,7 +211,7 @@ st.markdown(
     Esto permite que las materias con más créditos tengan mayor peso en el promedio.<br><br>
 
     <b>Cálculo de horas presenciales:</b><br>
-    Cada crédito equivale a <b>1 hora presencial semanal</b>.<br><br>
+    Para este calculo, se hace un estimado por cada crédito equivale a <b>1 hora presencial semanal</b>.<br><br>
 
     <b>Cálculo de horas autónomas:</b><br>
     Cada crédito equivale a <b>3 horas de trabajo total semanal</b>.<br>
