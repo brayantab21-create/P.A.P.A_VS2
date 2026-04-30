@@ -145,10 +145,10 @@ st.subheader("Sugerencias Académicas")
 if suma_creditos > 0:
     
     if papa < 3.0:
-        st.error("Actualmente estás en zona de riesgo académico.")
+        st.error("Actualmente estás en zona de riesgo académico. Si quieres conocer como fortalecer tus procesos, puedes agendar una cita con los profesionales de Dirección Académica")
 
     elif papa < 3.4:
-        st.warning("Estás en zona de alerta. Lo ideal es alcanzar 3.4 o más.")
+        st.warning("Estás en zona de alerta. Lo ideal es alcanzar 3.4 o más. Puedes buscar ayuda con los profesionales de Dirección Acádemica")
 
     else:
         st.success("Tu promedio está en una zona estable.")
