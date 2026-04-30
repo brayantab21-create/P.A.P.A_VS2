@@ -117,14 +117,14 @@ st.subheader("Estado Académico")
 
 if papa < 2.7:
     st.error(
-        "Debes hacer reingreso por el Consejo Superior Universitario. "
-        "Revisa las fechas y orientaciones para la solicitud."
+        "En caso tal de que desees permanecer en la Institución, una alternativa es solicitar reingreso por el Consejo Superior Universitario. "
+        "Puedes acercarte a Dirección Académica para revisar las fechas y orientaciones para la solicitud."
     )
 
 elif papa >= 2.7 and papa < 3.0:
     st.warning(
-        "Debes hacer reingreso por el Consejo de Facultad. "
-        "Revisa las fechas y orientaciones para la solicitud."
+        "En caso tal de que desees permanecer en la Institución, una alternativa es solicitar reingreso por el Consejo de Facultad. "
+        "Puedes acercarte a Dirección Académica para revisar las fechas y orientaciones para la solicitud."
     )
 
 elif papa >= 3.0 and papa < 3.4:
