@@ -118,23 +118,23 @@ st.subheader("Estado Académico")
 if papa < 2.7:
     st.error(
         "En caso tal de que desees permanecer en la Institución, una alternativa es solicitar reingreso por el Consejo Superior Universitario. "
-        "Puedes acercarte a Dirección Académica para revisar las fechas y orientaciones para la solicitud."
+        "Puedes acercarte a Dirección Acádemica para revisar las fechas y orientaciones para la solicitud."
     )
 
 elif papa >= 2.7 and papa < 3.0:
     st.warning(
         "En caso tal de que desees permanecer en la Institución, una alternativa es solicitar reingreso por el Consejo de Facultad. "
-        "Puedes acercarte a Dirección Académica para revisar las fechas y orientaciones para la solicitud."
+        "Puedes acercarte a Dirección Acádemica para revisar las fechas y orientaciones para la solicitud."
     )
 
 elif papa >= 3.0 and papa < 3.4:
     st.info(
-        "Tu promedio está en zona de alerta. Se recomienda fortalecer las asignaturas con bajo rendimiento."
+        "Tu promedio está en zona de alerta. Puedes acercarte a Dirección Acádemica para trazar un plan que te permita fortalecer las asignaturas con bajo rendimiento."
     )
 
 else:
     st.success(
-        "Tu promedio se encuentra en una zona estable."
+        "Tu promedio se encuentra en una zona estable. Sin embargo puedes asistir a Dirección Académica y solicitar estrategias para fortalecer tus procesos"
     )
 
 # -----------------------------------
