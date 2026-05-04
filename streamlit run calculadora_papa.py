@@ -308,9 +308,9 @@ col_h1, col_h2, col_h3 = st.columns(3)
 
 with col_h1:
     papa_anterior = st.number_input(
-        "P.A.P.A. acumulado anterior. En caso que sea tu primer semestre no debes diligenciarlo.",
+        "P.A.P.A. acumulado anterior.",
         min_value=0.0, max_value=5.0, step=0.01, value=0.0,
-        help="Promedio Aritmético Ponderado Acumulado de semestres previos"
+        help="Promedio Aritmético Ponderado Acumulado de semestres previos. En caso que sea tu primer semestre no debes diligenciarlo."
     )
 with col_h2:
     creditos_anteriores = st.number_input(
@@ -320,9 +320,9 @@ with col_h2:
     )
 with col_h3:
     creditos_disponibles = st.number_input(
-        "Créditos disponibles en tu bolsa. En caso que sea tu primer semestre no debes diligenciarlo.",
+        "Créditos disponibles en tu bolsa.",
         min_value=0, max_value=500, step=1, value=0,
-        help="Créditos que tienes disponibles actualmente. Si apruebas se duplican; si pierdes se descuentan."
+        help="Créditos que tienes disponibles actualmente. Si apruebas se duplican; si pierdes se descuentan; hasta un total de 80 créditos, puedes revisar el Acuerdo 008 de 2008 del Consejo Superior Universitario. En caso que sea tu primer semestre no debes diligenciarlo."
     )
 
 tiene_historial = creditos_anteriores > 0 and papa_anterior > 0
