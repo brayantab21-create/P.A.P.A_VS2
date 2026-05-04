@@ -53,7 +53,7 @@ st.markdown("""
     }
 
     .divider {
-        height: 3px;
+        height: 2px;
         background: linear-gradient(90deg, #4f8ef7, #a78bfa);
         border-radius: 2px;
         margin: 1.2rem 0;
