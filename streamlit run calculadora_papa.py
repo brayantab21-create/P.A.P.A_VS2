@@ -25,7 +25,7 @@ st.set_page_config(
 # -----------------------------------
 st.markdown("""
 <style>
-    .stApp { background-color: #f0f4f8; }
+    .stApp { background-color: #F54927; }
 
     .card {
         background: white;
