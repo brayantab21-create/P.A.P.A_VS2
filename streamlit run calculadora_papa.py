@@ -629,18 +629,6 @@ else:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-with col_h3:
-    st.markdown("""
-    <div style="display:flex; gap:12px; justify-content:flex-end;">
-        <a href="https://www.facebook.com/share/1B6kSKkmCS/?mibextid=wwXIfr" target="_blank">
-            <img src="https://cdn-icons-png.flaticon.com/32/733/733547.png"/>
-        </a>
-        <a href="https://www.instagram.com/palmiradiracademica?igsh=MTYzMXgwMG5zNDIxbQ%3D%3D&utm_source=qr" target="_blank">
-            <img src="https://cdn-icons-png.flaticon.com/32/733/733558.png"/>
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
-
 # -----------------------------------
 # EXPLICACIÓN
 # -----------------------------------
@@ -666,5 +654,32 @@ with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     > Si tienes dificultades, acude a **Acompañamiento Académico**.
     """)
 
+st.markdown("""
+<style>
+.footer-icons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    background: white;
+    padding: 10px 0;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+    z-index: 999;
+}
+</style>
+""", unsafe_allow_html=True)
 
+st.markdown("""
+<div class="footer-icons">
+    <a href="https://www.facebook.com/share/1B6kSKkmCS/?mibextid=wwXIfr" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/32/733/733547.png"/>
+    </a>
+    <a href="https://www.instagram.com/palmiradiracademica?igsh=MTYzMXgwMG5zNDIxbQ%3D%3D&utm_source=qr" target="_blank">
+        <img src="https://cdn-icons-png.flaticon.com/32/733/733558.png"/>
+    </a>
+</div>
+""", unsafe_allow_html=True)
 
