@@ -665,7 +665,7 @@ st.markdown("""
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    background: white;
+    background: black;
     padding: 10px 0;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
     z-index: 999;
