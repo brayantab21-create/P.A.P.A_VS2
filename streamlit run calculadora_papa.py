@@ -322,7 +322,7 @@ with col_h3:
     creditos_disponibles = st.number_input(
         "Créditos disponibles en tu bolsa.",
         min_value=0, max_value=500, step=1, value=0,
-        help="Créditos que tienes disponibles actualmente. Si apruebas se duplican; si pierdes se descuentan; hasta un total de 80 créditos, puedes revisar el Acuerdo 008 de 2008 del Consejo Superior Universitario. En caso que sea tu primer semestre no debes diligenciarlo."
+        help="Créditos que tienes disponibles actualmente. Si apruebas se duplican; si pierdes se descuentan; hasta un total de 80 créditos, puedes revisar el [Acuerdo 008 de 2008 del Consejo Superior Universitario](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983). En caso que sea tu primer semestre no debes diligenciarlo."
     )
 
 tiene_historial = creditos_anteriores > 0 and papa_anterior > 0
