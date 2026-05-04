@@ -266,10 +266,10 @@ def generar_pdf(df, papa_semestre, papa_final, tiene_historial,
     pev = papa_final
     if pev < 2.7:
         story += [Paragraph("Estado: RIESGO ALTO", e_alerta),
-                  Paragraph("Puedes solicitar excepcionalidad ante el Consejo Superior Universitario.", e_normal)]
+                  Paragraph("Puedes solicitar excepcionalidad ante el Consejo Superior Universitario. Puedes acudir a Dirección Académica y solicitar información al respecto.", e_normal)]
     elif pev < 3.0:
         story += [Paragraph("Estado: RIESGO MODERADO", e_normal),
-                  Paragraph("Puedes solicitar reingreso ante el Consejo de Facultad.", e_normal)]
+                  Paragraph("Puedes solicitar reingreso ante el Consejo de Facultad. Puedes acudir a Dirección Académica y solicitar información al respecto", e_normal)]
     elif pev < 3.4:
         story += [Paragraph("Estado: ZONA DE ALERTA", e_normal),
                   Paragraph("Visita Direccion Academica para trazar un plan de mejora.", e_normal)]
@@ -308,19 +308,19 @@ col_h1, col_h2, col_h3 = st.columns(3)
 
 with col_h1:
     papa_anterior = st.number_input(
-        "P.A.P.A. acumulado anterior",
+        "P.A.P.A. acumulado anterior. En caso que sea tu primer semestre no debes diligenciarlo.",
         min_value=0.0, max_value=5.0, step=0.01, value=0.0,
         help="Promedio Aritmético Ponderado Acumulado de semestres previos"
     )
 with col_h2:
     creditos_anteriores = st.number_input(
-        "Créditos cursados anteriormente",
+        "Créditos cursados anteriormente. En caso que sea tu primer semestre no debes diligenciarlo.",
         min_value=0, max_value=500, step=1, value=0,
         help="Total de créditos cursados hasta el semestre anterior"
     )
 with col_h3:
     creditos_disponibles = st.number_input(
-        "Créditos disponibles en tu bolsa",
+        "Créditos disponibles en tu bolsa. En caso que sea tu primer semestre no debes diligenciarlo.",
         min_value=0, max_value=500, step=1, value=0,
         help="Créditos que tienes disponibles actualmente. Si apruebas se duplican; si pierdes se descuentan."
     )
@@ -347,7 +347,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 # NÚMERO DE ASIGNATURAS
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📚 Asignaturas del Semestre")
+st.subheader("📚 Asignaturas del Semestre actual")
 num_asignaturas = st.number_input(
     "¿Cuántas asignaturas deseas ingresar?",
     min_value=1, max_value=15, step=1, value=5
