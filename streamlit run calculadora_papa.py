@@ -314,9 +314,9 @@ with col_h1:
     )
 with col_h2:
     creditos_anteriores = st.number_input(
-        "Créditos cursados anteriormente. En caso que sea tu primer semestre no debes diligenciarlo.",
+        "Créditos cursados anteriormente.",
         min_value=0, max_value=500, step=1, value=0,
-        help="Total de créditos cursados hasta el semestre anterior"
+        help="Total de créditos cursados hasta el semestre anterior. En caso que sea tu primer semestre no debes diligenciarlo."
     )
 with col_h3:
     creditos_disponibles = st.number_input(
