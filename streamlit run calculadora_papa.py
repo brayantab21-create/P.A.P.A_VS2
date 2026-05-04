@@ -48,7 +48,7 @@ st.markdown("""
     .subtitulo {
         text-align: center;
         font-size: 1.05rem;
-        color: #5a6a7e;
+        color: #C5E1ED;
         margin-bottom: 1.5rem;
     }
 
