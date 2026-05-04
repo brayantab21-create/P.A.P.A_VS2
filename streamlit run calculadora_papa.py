@@ -653,3 +653,16 @@ with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
 
     > Si tienes dificultades, acude a **Acompañamiento Académico**.
     """)
+
+
+with col_h3:
+    st.markdown("""
+    <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <a href="https://www.facebook.com/share/1B6kSKkmCS/?mibextid=wwXIfr" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/32/733/733547.png"/>
+        </a>
+        <a href="https://www.instagram.com/palmiradiracademica?igsh=MTYzMXgwMG5zNDIxbQ%3D%3D&utm_source=qr" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/32/733/733558.png"/>
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
