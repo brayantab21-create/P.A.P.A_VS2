@@ -249,7 +249,7 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Asignaturas del Semestre")
 num_asignaturas = st.number_input(
     "¿Cuántas asignaturas deseas ingresar?",
-    min_value=1, max_value=30, step=1, value=5
+    min_value=1, max_value=1000, step=1, value=5
 )
 st.markdown("</div>", unsafe_allow_html=True)
 
