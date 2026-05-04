@@ -662,24 +662,29 @@ st.markdown("""
     left: 0;
     width: 100%;
     display: flex;
-    justify-content: center;
-    gap: 15px;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
     background: white;
     padding: 10px 0;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
     z-index: 999;
+    font-size: 14px;
 }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="footer-icons">
-    <a href="https://www.facebook.com/share/1B6kSKkmCS/?mibextid=wwXIfr" target="_blank">
-        <img src="https://cdn-icons-png.flaticon.com/32/733/733547.png"/>
-    </a>
-    <a href="https://www.instagram.com/palmiradiracademica?igsh=MTYzMXgwMG5zNDIxbQ%3D%3D&utm_source=qr" target="_blank">
-        <img src="https://cdn-icons-png.flaticon.com/32/733/733558.png"/>
-    </a>
+    <div>Síguenos en nuestras redes sociales</div>
+    <div style="display:flex; gap:15px;">
+        <a href="https://www.facebook.com/share/1B6kSKkmCS/?mibextid=wwXIfr" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/32/733/733547.png"/>
+        </a>
+        <a href="https://www.instagram.com/palmiradiracademica?igsh=MTYzMXgwMG5zNDIxbQ%3D%3D&utm_source=qr" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/32/733/733558.png"/>
+        </a>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
