@@ -367,8 +367,6 @@ st.subheader("🪙 Bolsa de Créditos Disponibles")
 st.caption(
     "Acumula créditos aprobando asignaturas (cada crédito aprobado suma el doble), "
     "con un tope de 80. Si pierdes una asignatura, se descuenta esa cantidad de créditos."
-    "📄 Para más información consulta el "
-    "[Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983)."
 ) 
 
 balance   = 0
@@ -435,7 +433,7 @@ else:
 
 st.markdown(
     "📄 Para más información consulta el "
-    "[Acuerdo 008 de 2008 del CSU](PEGA_AQUÍ_EL_LINK)."
+    "[Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983)."
 )
 
 st.markdown("</div>", unsafe_allow_html=True)
