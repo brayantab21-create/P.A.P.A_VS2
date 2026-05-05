@@ -262,6 +262,20 @@ total_autonomas    = 0
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 
+# -----------------------------------
+# CONTADOR DE CRÉDITOS DISPONIBLES
+# -----------------------------------
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("🪙 Bolsa de Créditos")
+st.caption("Ingresa cuántos créditos tienes actualmente. Si apruebas se duplican (hasta un máximo de 80); si pierdes se descuenta la cantidad de créditos de la asignatura.")
+
+creditos_bolsa = st.number_input(
+    "¿Cuántos créditos tienes actualmente en tu bolsa?",
+    min_value=0, max_value=80, step=1, value=0,
+    help="La bolsa máxima es de 80 créditos. Por encima de ese tope los créditos ganados no se acumulan, pero los perdidos sí se descuentan."
+)
+st.markdown("</div>", unsafe_allow_html=True)
+
 for i in range(int(num_asignaturas)):
     st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([5, 1, 1])
@@ -328,6 +342,83 @@ with col_m2:
     st.metric("Total Créditos Matriculados", int(suma_creditos))
 
 st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------------
+# RESULTADO BOLSA DE CRÉDITOS
+# -----------------------------------
+if creditos_bolsa > 0 or True:   # siempre se muestra si el campo existe
+    ganados   = sum(row["Créditos"] * 2 for _, row in df.iterrows() if row["Nota"] >= 3.0)
+    perdidos  = sum(row["Créditos"]     for _, row in df.iterrows() if row["Nota"] <  3.0)
+
+    # Si ya estaba en 80, los créditos ganados solo llenan hasta 80
+    creditos_tras_ganancias = min(creditos_bolsa + ganados, 80)
+    creditos_finales_bolsa  = creditos_tras_ganancias - perdidos
+
+    variacion_neta = creditos_finales_bolsa - creditos_bolsa
+
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🪙 Proyección de Bolsa de Créditos")
+
+    col_b1, col_b2, col_b3 = st.columns(3)
+    with col_b1:
+        st.metric("Créditos antes", int(creditos_bolsa))
+    with col_b2:
+        signo = "+" if variacion_neta >= 0 else ""
+        st.metric("Variación", f"{signo}{int(variacion_neta)}", delta=int(variacion_neta))
+    with col_b3:
+        st.metric("Créditos después", int(creditos_finales_bolsa))
+
+    st.markdown("---")
+
+    # Desglose por asignatura
+    for _, row in df.iterrows():
+        if row["Nota"] >= 3.0:
+            st.markdown(
+                f"- ✅ **{row['Asignatura']}** — aprobó ({row['Nota']}) → "
+                f"suma **+{int(row['Créditos'] * 2)}** créditos *(sujeto al tope de 80)*"
+            )
+        else:
+            st.markdown(
+                f"- ❌ **{row['Asignatura']}** — perdió ({row['Nota']}) → "
+                f"descuenta **{int(row['Créditos'])}** créditos"
+            )
+
+    if creditos_bolsa >= 80:
+        st.info("ℹ️ Ya tenías 80 créditos en tu bolsa: los créditos ganados este semestre no se acumulan, pero los perdidos sí se descuentan.")
+
+    st.markdown("---")
+
+    # Alertas
+    if creditos_finales_bolsa <= 0:
+        st.error(
+            f"🚨 **Riesgo de pérdida de calidad de estudiante.** Tu bolsa llegaría a "
+            f"**{int(creditos_finales_bolsa)} créditos**. Sin créditos no podrás matricular. "
+            "Acércate urgentemente a **Dirección Académica**."
+        )
+    elif creditos_finales_bolsa <= 10:
+        st.error(
+            f"⚠️ **Créditos muy bajos ({int(creditos_finales_bolsa)} restantes).** "
+            "Estás en riesgo de no poder continuar matriculando. "
+            "Acércate con urgencia a **Dirección Académica**."
+        )
+    elif creditos_finales_bolsa <= 20:
+        st.warning(
+            f"🟠 **Créditos en zona de alerta ({int(creditos_finales_bolsa)} restantes).** "
+            "Consulta con **Dirección Académica** para planificar los próximos semestres."
+        )
+    else:
+        st.success(
+            f"🟢 **Créditos en zona estable ({int(creditos_finales_bolsa)} restantes).** "
+            "Puedes continuar con normalidad."
+        )
+
+    st.markdown(
+        "📄 Para más información consulta el "
+        "[Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983).",
+        unsafe_allow_html=False
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
 # ESTADO ACADÉMICO
