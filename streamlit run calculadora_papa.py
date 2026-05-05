@@ -90,7 +90,8 @@ st.markdown("""
 # -----------------------------------
 # FUNCIÓN PARA GENERAR PDF
 # -----------------------------------
-def generar_pdf(df, papa, total_presenciales, total_autonomas, sugerencias_texto):
+def generar_pdf(df, papa, total_presenciales, total_autonomas,
+                sugerencias_texto, balance_creditos):
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -109,57 +110,65 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas, sugerencias_texto
     verde       = colors.HexColor("#27ae60")
 
     def ep(name, **kw):
-        base = dict(fontSize=10, textColor=colors.HexColor("#2d3748"), spaceAfter=4, leading=14)
+        base = dict(fontSize=10, textColor=colors.HexColor("#2d3748"),
+                    spaceAfter=4, leading=14)
         base.update(kw)
         return ParagraphStyle(name, **base)
 
-    e_titulo    = ep('t',   fontSize=20, textColor=azul_oscuro, alignment=TA_CENTER, spaceAfter=4,  fontName='Helvetica-Bold')
-    e_subtitulo = ep('s',   fontSize=11, textColor=colors.HexColor("#5a6a7e"), alignment=TA_CENTER, spaceAfter=16)
-    e_seccion   = ep('sec', fontSize=13, textColor=azul_oscuro, spaceBefore=14, spaceAfter=6, fontName='Helvetica-Bold')
+    e_titulo    = ep('t',   fontSize=20, textColor=azul_oscuro,
+                     alignment=TA_CENTER, spaceAfter=4, fontName='Helvetica-Bold')
+    e_subtitulo = ep('s',   fontSize=11,
+                     textColor=colors.HexColor("#5a6a7e"),
+                     alignment=TA_CENTER, spaceAfter=16)
+    e_seccion   = ep('sec', fontSize=13, textColor=azul_oscuro,
+                     spaceBefore=14, spaceAfter=6, fontName='Helvetica-Bold')
     e_normal    = ep('n')
-    e_footer    = ep('f',   fontSize=8,  textColor=colors.HexColor("#94a3b8"), alignment=TA_CENTER)
+    e_footer    = ep('f',   fontSize=8,
+                     textColor=colors.HexColor("#94a3b8"), alignment=TA_CENTER)
     e_alerta    = ep('a',   fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
     e_ok        = ep('ok',  fontSize=10, textColor=verde, fontName='Helvetica-Bold')
 
     def tabla_base(data, col_widths):
         t = Table(data, colWidths=col_widths)
         t.setStyle(TableStyle([
-            ('BACKGROUND',   (0, 0), (-1, 0), azul_oscuro),
-            ('TEXTCOLOR',    (0, 0), (-1, 0), colors.white),
-            ('FONTNAME',     (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE',     (0, 0), (-1,-1), 9),
-            ('ALIGN',        (0, 0), (-1,-1), 'CENTER'),
-            ('VALIGN',       (0, 0), (-1,-1), 'MIDDLE'),
-            ('ROWBACKGROUNDS',(0,1), (-1,-1), [gris_claro, colors.white]),
-            ('GRID',         (0, 0), (-1,-1), 0.5, gris_borde),
-            ('TOPPADDING',   (0, 0), (-1,-1), 7),
-            ('BOTTOMPADDING',(0, 0), (-1,-1), 7),
+            ('BACKGROUND',    (0, 0), (-1, 0), azul_oscuro),
+            ('TEXTCOLOR',     (0, 0), (-1, 0), colors.white),
+            ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE',      (0, 0), (-1,-1), 9),
+            ('ALIGN',         (0, 0), (-1,-1), 'CENTER'),
+            ('VALIGN',        (0, 0), (-1,-1), 'MIDDLE'),
+            ('ROWBACKGROUNDS',(0, 1), (-1,-1), [gris_claro, colors.white]),
+            ('GRID',          (0, 0), (-1,-1), 0.5, gris_borde),
+            ('TOPPADDING',    (0, 0), (-1,-1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1,-1), 7),
         ]))
         return t
 
     # Encabezado
     story += [
-        Paragraph("Calculadora Académica", e_titulo),
+        Paragraph("Calculadora Academica", e_titulo),
         Paragraph("Reporte de P.A.P.A. y Carga Horaria", e_subtitulo),
         HRFlowable(width="100%", thickness=2, color=azul_medio),
         Spacer(1, 12),
-        Paragraph(f"Fecha de generación: {datetime.now().strftime('%d/%m/%Y %H:%M')}", e_normal),
+        Paragraph(f"Fecha de generacion: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+                  e_normal),
         Spacer(1, 10),
     ]
 
     # Tabla de asignaturas
     story.append(Paragraph("Asignaturas del Semestre", e_seccion))
-    enc = ["Asignatura", "Créditos", "Nota", "Estado", "H. Presenciales", "H. Autónomas"]
+    enc = ["Asignatura", "Creditos", "Nota", "Estado",
+           "H. Presenciales", "H. Autonomas"]
     filas = [enc]
     for _, row in df.iterrows():
         aprueba = row["Nota"] >= 3.0
         filas.append([
             str(row["Asignatura"]),
-            str(int(row["Créditos"])),
+            str(int(row["Creditos"])),
             str(round(row["Nota"], 1)),
-            "Aprobó" if aprueba else "Perdió",
+            "Aprobo" if aprueba else "Perdio",
             str(int(row["Horas Presenciales"])),
-            str(int(row["Horas Autónomas"])),
+            str(int(row["Horas Autonomas"])),
         ])
     col_w = [2.2*inch, 0.75*inch, 0.65*inch, 0.75*inch, 1.1*inch, 1.05*inch]
     t_asig = Table(filas, colWidths=col_w)
@@ -179,54 +188,59 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas, sugerencias_texto
     ]))
     story += [t_asig, Spacer(1, 14)]
 
-    # Resultados
+    # Resultados P.A.P.A.
     story.append(Paragraph("Resultados", e_seccion))
     res = [
         ["Indicador", "Valor"],
-        ["P.A.P.A. del semestre",           str(round(papa, 2))],
-        ["Total de créditos matriculados",   str(int(df["Créditos"].sum()))],
-        ["Horas presenciales / semana",      str(int(total_presenciales))],
-        ["Horas autónomas / semana",         str(int(total_autonomas))],
+        ["P.A.P.A. del semestre",          str(round(papa, 2))],
+        ["Total creditos matriculados",    str(int(df["Creditos"].sum()))],
+        ["Horas presenciales / semana",    str(int(total_presenciales))],
+        ["Horas autonomas / semana",       str(int(total_autonomas))],
+        ["Creditos disponibles en bolsa",  str(int(balance_creditos))],
     ]
     story += [tabla_base(res, [3.5*inch, 3*inch]), Spacer(1, 14)]
 
     # Sugerencias
     if sugerencias_texto:
-        story.append(Paragraph("Sugerencias Académicas", e_seccion))
+        story.append(Paragraph("Sugerencias Academicas", e_seccion))
         for s in sugerencias_texto:
             story.append(Paragraph(f"- {s.replace('**','')}", e_normal))
         story.append(Spacer(1, 10))
 
     # Estado académico
-    story.append(Paragraph("Estado Académico", e_seccion))
+    story.append(Paragraph("Estado Academico", e_seccion))
     if papa < 2.7:
         story += [
             Paragraph("Estado: RIESGO ALTO", e_alerta),
-            Paragraph("Puedes solicitar excepcionalidad ante el Consejo Superior Universitario. "
-                      "Puedes acudir a Dirección Académica y solicitar información al respecto.", e_normal)
+            Paragraph("Puedes solicitar excepcionalidad ante el Consejo Superior "
+                      "Universitario. Acude a Direccion Academica.", e_normal)
         ]
     elif papa < 3.0:
         story += [
             Paragraph("Estado: RIESGO MODERADO", e_normal),
             Paragraph("Puedes solicitar reingreso ante el Consejo de Facultad. "
-                      "Puedes acudir a Dirección Académica y solicitar información al respecto.", e_normal)
+                      "Acude a Direccion Academica.", e_normal)
         ]
     elif papa < 3.4:
         story += [
             Paragraph("Estado: ZONA DE ALERTA", e_normal),
-            Paragraph("Visita Dirección Académica para trazar un plan de mejora.", e_normal)
+            Paragraph("Visita Direccion Academica para trazar un plan de mejora.",
+                      e_normal)
         ]
     else:
         story += [
             Paragraph("Estado: ZONA ESTABLE", e_ok),
-            Paragraph("Puedes asistir a Dirección Académica para fortalecer tus procesos.", e_normal)
+            Paragraph("Puedes asistir a Direccion Academica para fortalecer tus procesos.",
+                      e_normal)
         ]
 
     story += [
         Spacer(1, 16),
         HRFlowable(width="100%", thickness=1, color=gris_borde),
         Spacer(1, 6),
-        Paragraph("Documento generado por la Calculadora Académica · Dirección Académica", e_footer)
+        Paragraph(
+            "Documento generado por la Calculadora Academica - Direccion Academica",
+            e_footer)
     ]
 
     doc.build(story)
@@ -238,8 +252,10 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas, sugerencias_texto
 # APP PRINCIPAL
 # =============================================
 
-st.markdown("<div class='titulo-principal'>🎓 Calculadora Académica</div>", unsafe_allow_html=True)
-st.markdown("<div class='subtitulo'>Cálculo de P.A.P.A. y carga horaria</div>", unsafe_allow_html=True)
+st.markdown("<div class='titulo-principal'>🎓 Calculadora Académica</div>",
+            unsafe_allow_html=True)
+st.markdown("<div class='subtitulo'>Cálculo de P.A.P.A. y carga horaria</div>",
+            unsafe_allow_html=True)
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 # -----------------------------------
@@ -249,7 +265,7 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Asignaturas del Semestre")
 num_asignaturas = st.number_input(
     "¿Cuántas asignaturas deseas ingresar?",
-    min_value=1, max_value=1000, step=1, value=5
+    min_value=1, max_value=30, step=1, value=5
 )
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -262,12 +278,52 @@ total_autonomas    = 0
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 
+for i in range(int(num_asignaturas)):
+    st.markdown(
+        f"<span class='asignatura-header'>Asignatura {i+1}</span>",
+        unsafe_allow_html=True
+    )
+    col1, col2, col3 = st.columns([5, 1, 1])
+
+    with col1:
+        nombre = st.text_input(
+            "Nombre", key=f"nombre_{i}",
+            label_visibility="collapsed",
+            placeholder=f"Nombre de la asignatura {i+1}"
+        )
+    with col2:
+        creditos = st.number_input(
+            "Creditos", min_value=1, max_value=10, step=1, key=f"creditos_{i}"
+        )
+    with col3:
+        nota = st.number_input(
+            "Nota", min_value=0.0, max_value=5.0, step=0.1, key=f"nota_{i}"
+        )
+
+    horas_presenciales  = creditos
+    horas_autonomas     = (creditos * 3) - creditos
+    total_presenciales += horas_presenciales
+    total_autonomas    += horas_autonomas
+
+    datos.append({
+        "Asignatura":         nombre if nombre else f"Asignatura {i+1}",
+        "Creditos":           creditos,
+        "Nota":               nota,
+        "Horas Presenciales": horas_presenciales,
+        "Horas Autonomas":    horas_autonomas
+    })
+
+    if i < int(num_asignaturas) - 1:
+        st.markdown("---")
+
+st.markdown("</div>", unsafe_allow_html=True)
+
 # -----------------------------------
 # CÁLCULOS
 # -----------------------------------
 df             = pd.DataFrame(datos)
-suma_ponderada = (df["Créditos"] * df["Nota"]).sum()
-suma_creditos  = df["Créditos"].sum()
+suma_ponderada = (df["Creditos"] * df["Nota"]).sum()
+suma_creditos  = df["Creditos"].sum()
 papa           = round(suma_ponderada / suma_creditos, 2) if suma_creditos > 0 else 0
 
 # -----------------------------------
@@ -277,6 +333,11 @@ df_vista = df.copy()
 df_vista.insert(3, "Estado", df_vista["Nota"].apply(
     lambda n: "✅ Aprobó" if n >= 3.0 else "❌ Perdió"
 ))
+df_vista = df_vista.rename(columns={
+    "Creditos":           "Créditos",
+    "Horas Autonomas":    "Horas Autónomas",
+    "Horas Presenciales": "Horas Presenciales"
+})
 df_vista.index = [""] * len(df_vista)
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -304,10 +365,11 @@ st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("🪙 Bolsa de Créditos Disponibles")
 st.caption(
-    "Se procesan todas las asignaturas ingresadas en orden. "
-    "Cada materia aprobada suma el doble de sus créditos, con tope de 80. "
-    "Cada materia perdida descuenta sus créditos directamente."
-)
+    "Acumula créditos aprobando asignaturas (cada crédito aprobado suma el doble), "
+    "con un tope de 80. Si pierdes una asignatura, se descuenta esa cantidad de créditos."
+    "📄 Para más información consulta el "
+    "[Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983)."
+) 
 
 balance   = 0
 historial = []
@@ -315,13 +377,14 @@ historial = []
 for _, row in df.iterrows():
     antes = balance
     if row["Nota"] >= 3.0:
-        ganancia = row["Créditos"] * 2
+        ganancia = row["Creditos"] * 2
         balance  = min(balance + ganancia, 80)
-        efecto   = f"+{int(balance - antes)} (de {int(ganancia)} posibles)"
+        sumado   = balance - antes
+        efecto   = f"+{int(sumado)}" if sumado == ganancia else f"+{int(sumado)} (tope 80)"
         estado   = "✅ Aprobó"
     else:
-        balance -= row["Créditos"]
-        efecto   = f"-{int(row['Créditos'])}"
+        balance -= row["Creditos"]
+        efecto   = f"-{int(row['Creditos'])}"
         estado   = "❌ Perdió"
 
     historial.append({
@@ -332,21 +395,20 @@ for _, row in df.iterrows():
         "Saldo":      int(balance)
     })
 
-df_bolsa = pd.DataFrame(historial)
-df_bolsa.index = [""] * len(df_bolsa)
+df_bolsa        = pd.DataFrame(historial)
+df_bolsa.index  = [""] * len(df_bolsa)
 st.dataframe(df_bolsa, use_container_width=True)
 
 st.markdown("---")
 
 col_b1, col_b2 = st.columns(2)
 with col_b1:
-    st.metric("Créditos disponibles actuales", int(balance))
+    st.metric("Créditos disponibles", int(balance))
 with col_b2:
     st.metric("Tope máximo de la bolsa", 80)
 
 st.markdown("---")
 
-# Alertas
 if balance <= 0:
     st.error(
         f"🚨 **Riesgo de pérdida de calidad de estudiante.** "
@@ -373,7 +435,7 @@ else:
 
 st.markdown(
     "📄 Para más información consulta el "
-    "[Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983)."
+    "[Acuerdo 008 de 2008 del CSU](PEGA_AQUÍ_EL_LINK)."
 )
 
 st.markdown("</div>", unsafe_allow_html=True)
@@ -386,13 +448,13 @@ st.subheader("📌 Estado Académico")
 
 if papa < 2.7:
     st.error(
-        "🔴 **Riesgo alto.** Puedes solicitar excepcionalidad ante el Consejo Superior Universitario. "
-        "Acércate a Dirección Académica para orientaciones."
+        "🔴 **Riesgo alto.** Puedes solicitar excepcionalidad ante el Consejo "
+        "Superior Universitario. Acércate a Dirección Académica para orientaciones."
     )
 elif papa < 3.0:
     st.warning(
-        "🟠 **Riesgo moderado.** Puedes solicitar reingreso ante el Consejo de Facultad. "
-        "Acércate a Dirección Académica para revisar fechas y orientaciones."
+        "🟠 **Riesgo moderado.** Puedes solicitar reingreso ante el Consejo de "
+        "Facultad. Acércate a Dirección Académica para revisar fechas y orientaciones."
     )
 elif papa < 3.4:
     st.info(
@@ -421,12 +483,15 @@ if suma_creditos > 0:
         if nota_actual < 3.5:
             for meta_nota in [3.0, 3.5, 4.0]:
                 if meta_nota > nota_actual:
-                    nueva_sp   = suma_ponderada - (nota_actual * row["Créditos"]) + (meta_nota * row["Créditos"])
+                    nueva_sp   = (suma_ponderada
+                                  - (nota_actual * row["Creditos"])
+                                  + (meta_nota   * row["Creditos"]))
                     nuevo_papa = nueva_sp / suma_creditos
                     if nuevo_papa >= 3.0:
                         sugerencias.append(
-                            f"Si subes **{row['Asignatura']}** de {nota_actual} a {meta_nota}, "
-                            f"tu P.A.P.A. sería aprox. **{round(nuevo_papa, 2)}**."
+                            f"Si subes **{row['Asignatura']}** de {nota_actual} "
+                            f"a {meta_nota}, tu P.A.P.A. sería aprox. "
+                            f"**{round(nuevo_papa, 2)}**."
                         )
                         break
 
@@ -463,7 +528,7 @@ if suma_creditos > 0:
     pdf_buffer = generar_pdf(
         df, papa,
         total_presenciales, total_autonomas,
-        sugerencias
+        sugerencias, balance
     )
     st.download_button(
         label="⬇️  Descargar Reporte PDF",
@@ -484,7 +549,11 @@ with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     **Cálculo del P.A.P.A.:**
     Se multiplica la nota de cada asignatura por sus créditos, se suman esos productos
     y se dividen entre el total de créditos matriculados.
-    Así, las materias con más créditos tienen mayor peso en el promedio.
+
+    **Bolsa de créditos:**
+    - Si **apruebas** (nota ≥ 3.0) → suma `créditos × 2`, con tope de 80.
+    - Si **pierdes** (nota < 3.0) → descuenta `créditos`.
+    - Una vez en 80, los créditos ganados no se acumulan, pero los perdidos sí se descuentan.
 
     **Horas presenciales:** 1 hora semanal por cada crédito.
 
@@ -492,11 +561,11 @@ with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
 
     **Ejemplo:** 4 créditos = 4 h presenciales + 8 h autónomas = 12 h totales por semana.
 
-    > Si tienes dificultades para organizar tu tiempo, acude a **Acompañamiento Académico**.
+    > Si tienes dificultades, acude a **Acompañamiento Académico**.
     """)
 
 # -----------------------------------
-# FOOTER CON REDES SOCIALES
+# FOOTER
 # -----------------------------------
 st.markdown("""
 <style>
