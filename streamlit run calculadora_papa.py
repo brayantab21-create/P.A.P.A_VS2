@@ -365,24 +365,32 @@ st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("🪙 Bolsa de Créditos Disponibles")
 st.caption(
-    "Acumula créditos aprobando asignaturas (cada crédito aprobado suma el doble), "
-    "con un tope de 80. Si pierdes una asignatura, se descuenta esa cantidad de créditos."
-) 
+    "Acumula hasta 80 créditos aprobando asignaturas. "
+    "Una vez alcanzado ese tope, aprobar más materias ya no suma créditos. "
+    "Perder una materia siempre descuenta créditos, sin importar el saldo."
+)
 
-balance   = 0
-historial = []
+balance          = 0
+tope_alcanzado   = False
+historial        = []
 
 for _, row in df.iterrows():
-    antes = balance
     if row["Nota"] >= 3.0:
-        ganancia = row["Creditos"] * 2
-        balance  = min(balance + ganancia, 80)
-        sumado   = balance - antes
-        efecto   = f"+{int(sumado)}" if sumado == ganancia else f"+{int(sumado)} (tope 80)"
-        estado   = "✅ Aprobó"
+        if tope_alcanzado:
+            efecto = "Sin efecto (tope 80 ya alcanzado)"
+            estado = "✅ Aprobó"
+            # balance no cambia
+        else:
+            ganancia = row["Creditos"] * 2
+            balance  = min(balance + ganancia, 80)
+            if balance >= 80:
+                tope_alcanzado = True
+            sumado = balance - (balance - min(ganancia, 80 - (balance - min(ganancia, 80 - balance))))
+            efecto = f"+{int(min(ganancia, 80))} → saldo {int(balance)}"
+            estado = "✅ Aprobó"
     else:
         balance -= row["Creditos"]
-        efecto   = f"-{int(row['Creditos'])}"
+        efecto   = f"-{int(row['Creditos'])} → saldo {int(balance)}"
         estado   = "❌ Perdió"
 
     historial.append({
@@ -393,8 +401,8 @@ for _, row in df.iterrows():
         "Saldo":      int(balance)
     })
 
-df_bolsa        = pd.DataFrame(historial)
-df_bolsa.index  = [""] * len(df_bolsa)
+df_bolsa       = pd.DataFrame(historial)
+df_bolsa.index = [""] * len(df_bolsa)
 st.dataframe(df_bolsa, use_container_width=True)
 
 st.markdown("---")
@@ -403,7 +411,13 @@ col_b1, col_b2 = st.columns(2)
 with col_b1:
     st.metric("Créditos disponibles", int(balance))
 with col_b2:
-    st.metric("Tope máximo de la bolsa", 80)
+    if tope_alcanzado:
+        st.metric("Estado del tope", "🔒 Tope de 80 alcanzado")
+    else:
+        st.metric("Tope máximo", 80)
+
+if tope_alcanzado:
+    st.info("🔒 Ya alcanzaste el tope de 80 créditos. Aprobar más materias no incrementará tu bolsa, pero perder materias sí la reducirá.")
 
 st.markdown("---")
 
@@ -433,7 +447,7 @@ else:
 
 st.markdown(
     "📄 Para más información consulta el "
-    "[Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983)."
+    "[Acuerdo 008 de 2008 del CSU](PEGA_AQUÍ_EL_LINK)."
 )
 
 st.markdown("</div>", unsafe_allow_html=True)
