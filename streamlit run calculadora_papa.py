@@ -266,44 +266,79 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 # CONTADOR DE CRÉDITOS DISPONIBLES
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("🪙 Bolsa de Créditos")
-st.caption("Ingresa cuántos créditos tienes actualmente. Si apruebas se duplican (hasta un máximo de 80); si pierdes se descuenta la cantidad de créditos de la asignatura.")
-
-creditos_bolsa = st.number_input(
-    "¿Cuántos créditos tienes actualmente en tu bolsa?",
-    min_value=0, max_value=80, step=1, value=0,
-    help="La bolsa máxima es de 80 créditos. Por encima de ese tope los créditos ganados no se acumulan, pero los perdidos sí se descuentan."
+st.subheader("🪙 Bolsa de Créditos Disponibles")
+st.caption(
+    "Se procesan todas las asignaturas ingresadas en orden. "
+    "Cada materia aprobada suma el doble de sus créditos, con tope de 80. "
+    "Cada materia perdida descuenta sus créditos directamente."
 )
-st.markdown("</div>", unsafe_allow_html=True)
 
-for i in range(int(num_asignaturas)):
-    st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([5, 1, 1])
+balance   = 0
+historial = []
 
-    with col1:
-        nombre = st.text_input("Nombre", key=f"nombre_{i}",
-                               label_visibility="collapsed",
-                               placeholder=f"Nombre de la asignatura {i+1}")
-    with col2:
-        creditos = st.number_input("Créditos", min_value=1, max_value=10, step=1, key=f"creditos_{i}")
-    with col3:
-        nota = st.number_input("Nota", min_value=0.0, max_value=5.0, step=0.1, key=f"nota_{i}")
+for _, row in df.iterrows():
+    antes = balance
+    if row["Nota"] >= 3.0:
+        ganancia = row["Créditos"] * 2
+        balance  = min(balance + ganancia, 80)
+        efecto   = f"+{int(balance - antes)} (de {int(ganancia)} posibles)"
+        estado   = "✅ Aprobó"
+    else:
+        balance -= row["Créditos"]
+        efecto   = f"-{int(row['Créditos'])}"
+        estado   = "❌ Perdió"
 
-    horas_presenciales  = creditos
-    horas_autonomas     = (creditos * 3) - creditos
-    total_presenciales += horas_presenciales
-    total_autonomas    += horas_autonomas
-
-    datos.append({
-        "Asignatura":         nombre if nombre else f"Asignatura {i+1}",
-        "Créditos":           creditos,
-        "Nota":               nota,
-        "Horas Presenciales": horas_presenciales,
-        "Horas Autónomas":    horas_autonomas
+    historial.append({
+        "Asignatura": row["Asignatura"],
+        "Nota":       row["Nota"],
+        "Estado":     estado,
+        "Efecto":     efecto,
+        "Saldo":      int(balance)
     })
 
-    if i < int(num_asignaturas) - 1:
-        st.markdown("---")
+df_bolsa = pd.DataFrame(historial)
+df_bolsa.index = [""] * len(df_bolsa)
+st.dataframe(df_bolsa, use_container_width=True)
+
+st.markdown("---")
+
+col_b1, col_b2 = st.columns(2)
+with col_b1:
+    st.metric("Créditos disponibles actuales", int(balance))
+with col_b2:
+    st.metric("Tope máximo de la bolsa", 80)
+
+st.markdown("---")
+
+# Alertas
+if balance <= 0:
+    st.error(
+        f"🚨 **Riesgo de pérdida de calidad de estudiante.** "
+        f"Tu bolsa llegó a **{int(balance)} créditos**. "
+        "Sin créditos disponibles no podrás matricular. "
+        "Acércate urgentemente a **Dirección Académica**."
+    )
+elif balance <= 10:
+    st.error(
+        f"⚠️ **Créditos muy bajos ({int(balance)} restantes).** "
+        "Estás en riesgo de no poder continuar matriculando. "
+        "Acércate con urgencia a **Dirección Académica**."
+    )
+elif balance <= 20:
+    st.warning(
+        f"🟠 **Créditos en zona de alerta ({int(balance)} restantes).** "
+        "Consulta con **Dirección Académica** para planificar los próximos semestres."
+    )
+else:
+    st.success(
+        f"🟢 **Créditos en zona estable ({int(balance)} restantes).** "
+        "Puedes continuar con normalidad."
+    )
+
+st.markdown(
+    "📄 Para más información consulta el "
+    "[Acuerdo 008 de 2008 del CSU](PEGA_AQUÍ_EL_LINK)."
+)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
