@@ -276,7 +276,7 @@ if metodo == "✍️ Ingresar manualmente":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     num_asignaturas = st.number_input(
         "¿Cuántas asignaturas deseas ingresar?",
-        min_value=1, max_value=30, step=1, value=5
+        min_value=1, max_value=300, step=1, value=5
     )
 
     for i in range(int(num_asignaturas)):
