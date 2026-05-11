@@ -259,64 +259,114 @@ st.markdown("<div class='subtitulo'>Cálculo de P.A.P.A. y carga horaria</div>",
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# NÚMERO DE ASIGNATURAS
+# ENTRADA DE DATOS
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Asignaturas del Semestre")
-num_asignaturas = st.number_input(
-    "¿Cuántas asignaturas deseas ingresar?",
-    min_value=1, max_value=1000, step=1, value=5
+
+metodo = st.radio(
+    "¿Cómo deseas ingresar las asignaturas?",
+    ["✍️ Ingresar manualmente", "📋 Pegar desde Excel"],
+    horizontal=True
 )
+
+datos_excel = []
+
+if metodo == "📋 Pegar desde Excel":
+    st.caption(
+        "Copia las celdas directamente desde Excel (columnas: Asignatura, Créditos, Nota) "
+        "y pégalas aquí. Sin encabezados."
+    )
+    texto = st.text_area(
+        "Pega aquí los datos:",
+        height=200,
+        placeholder="Cálculo diferencial\t4\t3.5\nÁlgebra lineal\t3\t4.0\nFísica I\t4\t2.8"
+    )
+    if texto.strip():
+        errores = []
+        for i, linea in enumerate(texto.strip().split("\n")):
+            partes = linea.strip().split("\t")
+            if len(partes) < 3:
+                errores.append(f"Fila {i+1}: se esperaban 3 columnas, se encontraron {len(partes)}.")
+                continue
+            try:
+                nombre   = partes[0].strip()
+                cred     = int(float(partes[1].strip()))
+                nota     = float(partes[2].strip().replace(",", "."))
+                datos_excel.append({
+                    "Asignatura":         nombre,
+                    "Creditos":           cred,
+                    "Nota":               nota,
+                    "Horas Presenciales": cred,
+                    "Horas Autonomas":    (cred * 3) - cred
+                })
+            except ValueError:
+                errores.append(f"Fila {i+1}: verifica que créditos y nota sean números.")
+
+        if errores:
+            for e in errores:
+                st.warning(e)
+        if datos_excel:
+            st.success(f"✅ {len(datos_excel)} asignaturas cargadas correctamente.")
+
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# INGRESO DE DATOS
+# INGRESO MANUAL
 # -----------------------------------
-datos              = []
 total_presenciales = 0
 total_autonomas    = 0
+datos              = []
 
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-
-for i in range(int(num_asignaturas)):
-    st.markdown(
-        f"<span class='asignatura-header'>Asignatura {i+1}</span>",
-        unsafe_allow_html=True
+if metodo == "✍️ Ingresar manualmente":
+    num_asignaturas = st.number_input(
+        "¿Cuántas asignaturas deseas ingresar?",
+        min_value=1, max_value=30, step=1, value=5
     )
-    col1, col2, col3 = st.columns([5, 1, 1])
 
-    with col1:
-        nombre = st.text_input(
-            "Nombre", key=f"nombre_{i}",
-            label_visibility="collapsed",
-            placeholder=f"Nombre de la asignatura {i+1}"
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+
+    for i in range(int(num_asignaturas)):
+        st.markdown(
+            f"<span class='asignatura-header'>Asignatura {i+1}</span>",
+            unsafe_allow_html=True
         )
-    with col2:
-        creditos = st.number_input(
-            "Creditos", min_value=1, max_value=10, step=1, key=f"creditos_{i}"
-        )
-    with col3:
-        nota = st.number_input(
-            "Nota", min_value=0.0, max_value=5.0, step=0.1, key=f"nota_{i}"
-        )
+        col1, col2, col3 = st.columns([5, 1, 1])
+        with col1:
+            nombre = st.text_input("Nombre", key=f"nombre_{i}",
+                                   label_visibility="collapsed",
+                                   placeholder=f"Nombre de la asignatura {i+1}")
+        with col2:
+            creditos = st.number_input("Creditos", min_value=1, max_value=10,
+                                       step=1, key=f"creditos_{i}")
+        with col3:
+            nota = st.number_input("Nota", min_value=0.0, max_value=5.0,
+                                   step=0.1, key=f"nota_{i}")
 
-    horas_presenciales  = creditos
-    horas_autonomas     = (creditos * 3) - creditos
-    total_presenciales += horas_presenciales
-    total_autonomas    += horas_autonomas
+        horas_presenciales  = creditos
+        horas_autonomas     = (creditos * 3) - creditos
+        total_presenciales += horas_presenciales
+        total_autonomas    += horas_autonomas
 
-    datos.append({
-        "Asignatura":         nombre if nombre else f"Asignatura {i+1}",
-        "Creditos":           creditos,
-        "Nota":               nota,
-        "Horas Presenciales": horas_presenciales,
-        "Horas Autonomas":    horas_autonomas
-    })
+        datos.append({
+            "Asignatura":         nombre if nombre else f"Asignatura {i+1}",
+            "Creditos":           creditos,
+            "Nota":               nota,
+            "Horas Presenciales": horas_presenciales,
+            "Horas Autonomas":    horas_autonomas
+        })
 
-    if i < int(num_asignaturas) - 1:
-        st.markdown("---")
+        if i < int(num_asignaturas) - 1:
+            st.markdown("---")
 
-st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+else:
+    datos = datos_excel
+
+for row in datos:
+    total_presenciales += row["Horas Presenciales"]
+    total_autonomas    += row["Horas Autonomas"]
 
 # -----------------------------------
 # CÁLCULOS
@@ -403,7 +453,8 @@ for _, row in df.iterrows():
 
 df_bolsa       = pd.DataFrame(historial)
 df_bolsa.index = [""] * len(df_bolsa)
-st.dataframe(df_bolsa, use_container_width=True)
+with st.expander("Ver detalle de movimientos de créditos"):
+    st.dataframe(df_bolsa, use_container_width=True)
 
 st.markdown("---")
 
