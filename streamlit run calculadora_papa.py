@@ -82,7 +82,7 @@ st.markdown("""
         width: 100% !important;
     }
 
-    footer {visibility: hidden;}
+    footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -91,7 +91,7 @@ st.markdown("""
 # FUNCIÓN PARA GENERAR PDF
 # -----------------------------------
 def generar_pdf(df, papa, total_presenciales, total_autonomas,
-                sugerencias_texto, balance_creditos):
+                sugerencias_texto, balance_creditos, tope_alcanzado):
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -99,7 +99,6 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
         rightMargin=0.75*inch, leftMargin=0.75*inch,
         topMargin=0.75*inch, bottomMargin=0.75*inch
     )
-
     story = []
 
     azul_oscuro = colors.HexColor("#1a2e5a")
@@ -117,46 +116,45 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
 
     e_titulo    = ep('t',   fontSize=20, textColor=azul_oscuro,
                      alignment=TA_CENTER, spaceAfter=4, fontName='Helvetica-Bold')
-    e_subtitulo = ep('s',   fontSize=11,
-                     textColor=colors.HexColor("#5a6a7e"),
+    e_subtitulo = ep('s',   fontSize=11, textColor=colors.HexColor("#5a6a7e"),
                      alignment=TA_CENTER, spaceAfter=16)
     e_seccion   = ep('sec', fontSize=13, textColor=azul_oscuro,
                      spaceBefore=14, spaceAfter=6, fontName='Helvetica-Bold')
     e_normal    = ep('n')
-    e_footer    = ep('f',   fontSize=8,
-                     textColor=colors.HexColor("#94a3b8"), alignment=TA_CENTER)
+    e_footer    = ep('f',   fontSize=8,  textColor=colors.HexColor("#94a3b8"),
+                     alignment=TA_CENTER)
     e_alerta    = ep('a',   fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
     e_ok        = ep('ok',  fontSize=10, textColor=verde, fontName='Helvetica-Bold')
 
     def tabla_base(data, col_widths):
         t = Table(data, colWidths=col_widths)
         t.setStyle(TableStyle([
-            ('BACKGROUND',    (0, 0), (-1, 0), azul_oscuro),
-            ('TEXTCOLOR',     (0, 0), (-1, 0), colors.white),
-            ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE',      (0, 0), (-1,-1), 9),
-            ('ALIGN',         (0, 0), (-1,-1), 'CENTER'),
-            ('VALIGN',        (0, 0), (-1,-1), 'MIDDLE'),
-            ('ROWBACKGROUNDS',(0, 1), (-1,-1), [gris_claro, colors.white]),
-            ('GRID',          (0, 0), (-1,-1), 0.5, gris_borde),
-            ('TOPPADDING',    (0, 0), (-1,-1), 7),
-            ('BOTTOMPADDING', (0, 0), (-1,-1), 7),
+            ('BACKGROUND',     (0,0), (-1,0), azul_oscuro),
+            ('TEXTCOLOR',      (0,0), (-1,0), colors.white),
+            ('FONTNAME',       (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE',       (0,0), (-1,-1), 9),
+            ('ALIGN',          (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',         (0,0), (-1,-1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [gris_claro, colors.white]),
+            ('GRID',           (0,0), (-1,-1), 0.5, gris_borde),
+            ('TOPPADDING',     (0,0), (-1,-1), 7),
+            ('BOTTOMPADDING',  (0,0), (-1,-1), 7),
         ]))
         return t
 
-    # Encabezado
     story += [
         Paragraph("Calculadora Academica", e_titulo),
         Paragraph("Reporte de P.A.P.A. y Carga Horaria", e_subtitulo),
         HRFlowable(width="100%", thickness=2, color=azul_medio),
         Spacer(1, 12),
-        Paragraph(f"Fecha de generacion: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-                  e_normal),
+        Paragraph(
+            f"Fecha de generacion: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            e_normal),
         Spacer(1, 10),
     ]
 
-    # Tabla de asignaturas
-    story.append(Paragraph("Asignaturas del Semestre", e_seccion))
+    # Tabla asignaturas
+    story.append(Paragraph("Asignaturas", e_seccion))
     enc = ["Asignatura", "Creditos", "Nota", "Estado",
            "H. Presenciales", "H. Autonomas"]
     filas = [enc]
@@ -165,40 +163,42 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
         filas.append([
             str(row["Asignatura"]),
             str(int(row["Creditos"])),
-            str(round(row["Nota"], 1)),
+            str(round(float(row["Nota"]), 1)),
             "Aprobo" if aprueba else "Perdio",
             str(int(row["Horas Presenciales"])),
             str(int(row["Horas Autonomas"])),
         ])
-    col_w = [2.2*inch, 0.75*inch, 0.65*inch, 0.75*inch, 1.1*inch, 1.05*inch]
+    col_w = [2.0*inch, 0.75*inch, 0.65*inch, 0.75*inch, 1.1*inch, 1.05*inch]
     t_asig = Table(filas, colWidths=col_w)
     t_asig.setStyle(TableStyle([
-        ('BACKGROUND',    (0, 0), (-1, 0), azul_oscuro),
-        ('TEXTCOLOR',     (0, 0), (-1, 0), colors.white),
-        ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE',      (0, 0), (-1,-1), 9),
-        ('ALIGN',         (0, 0), (-1,-1), 'CENTER'),
-        ('ALIGN',         (0, 1), (0, -1), 'LEFT'),
-        ('VALIGN',        (0, 0), (-1,-1), 'MIDDLE'),
-        ('ROWBACKGROUNDS',(0, 1), (-1,-1), [gris_claro, colors.white]),
-        ('GRID',          (0, 0), (-1,-1), 0.5, gris_borde),
-        ('TOPPADDING',    (0, 0), (-1,-1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1,-1), 6),
-        ('LEFTPADDING',   (0, 1), (0, -1), 6),
+        ('BACKGROUND',     (0,0), (-1,0), azul_oscuro),
+        ('TEXTCOLOR',      (0,0), (-1,0), colors.white),
+        ('FONTNAME',       (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE',       (0,0), (-1,-1), 9),
+        ('ALIGN',          (0,0), (-1,-1), 'CENTER'),
+        ('ALIGN',          (0,1), (0,-1), 'LEFT'),
+        ('VALIGN',         (0,0), (-1,-1), 'MIDDLE'),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [gris_claro, colors.white]),
+        ('GRID',           (0,0), (-1,-1), 0.5, gris_borde),
+        ('TOPPADDING',     (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING',  (0,0), (-1,-1), 6),
+        ('LEFTPADDING',    (0,1), (0,-1), 6),
     ]))
     story += [t_asig, Spacer(1, 14)]
 
-    # Resultados P.A.P.A.
+    # Resultados
     story.append(Paragraph("Resultados", e_seccion))
     res = [
         ["Indicador", "Valor"],
-        ["P.A.P.A. del semestre",          str(round(papa, 2))],
-        ["Total creditos matriculados",    str(int(df["Creditos"].sum()))],
-        ["Horas presenciales / semana",    str(int(total_presenciales))],
-        ["Horas autonomas / semana",       str(int(total_autonomas))],
-        ["Creditos disponibles en bolsa",  str(int(balance_creditos))],
+        ["P.A.P.A. del semestre",         str(round(papa, 2))],
+        ["Total creditos matriculados",   str(int(df["Creditos"].sum()))],
+        ["Horas presenciales / semana",   str(int(total_presenciales))],
+        ["Horas autonomas / semana",      str(int(total_autonomas))],
+        ["Creditos disponibles en bolsa", str(int(balance_creditos))],
+        ["Tope de 80 alcanzado",
+         "Si" if tope_alcanzado else "No"],
     ]
-    story += [tabla_base(res, [3.5*inch, 3*inch]), Spacer(1, 14)]
+    story += [tabla_base(res, [3.5*inch, 3.0*inch]), Spacer(1, 14)]
 
     # Sugerencias
     if sugerencias_texto:
@@ -207,32 +207,23 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
             story.append(Paragraph(f"- {s.replace('**','')}", e_normal))
         story.append(Spacer(1, 10))
 
-    # Estado académico
+    # Estado
     story.append(Paragraph("Estado Academico", e_seccion))
     if papa < 2.7:
-        story += [
-            Paragraph("Estado: RIESGO ALTO", e_alerta),
-            Paragraph("Puedes solicitar excepcionalidad ante el Consejo Superior "
-                      "Universitario. Acude a Direccion Academica.", e_normal)
-        ]
+        story += [Paragraph("Estado: RIESGO ALTO", e_alerta),
+                  Paragraph("Solicitar excepcionalidad ante el Consejo Superior "
+                             "Universitario. Acudir a Direccion Academica.", e_normal)]
     elif papa < 3.0:
-        story += [
-            Paragraph("Estado: RIESGO MODERADO", e_normal),
-            Paragraph("Puedes solicitar reingreso ante el Consejo de Facultad. "
-                      "Acude a Direccion Academica.", e_normal)
-        ]
+        story += [Paragraph("Estado: RIESGO MODERADO", e_normal),
+                  Paragraph("Solicitar reingreso ante el Consejo de Facultad. "
+                             "Acudir a Direccion Academica.", e_normal)]
     elif papa < 3.4:
-        story += [
-            Paragraph("Estado: ZONA DE ALERTA", e_normal),
-            Paragraph("Visita Direccion Academica para trazar un plan de mejora.",
-                      e_normal)
-        ]
+        story += [Paragraph("Estado: ZONA DE ALERTA", e_normal),
+                  Paragraph("Visitar Direccion Academica para plan de mejora.", e_normal)]
     else:
-        story += [
-            Paragraph("Estado: ZONA ESTABLE", e_ok),
-            Paragraph("Puedes asistir a Direccion Academica para fortalecer tus procesos.",
-                      e_normal)
-        ]
+        story += [Paragraph("Estado: ZONA ESTABLE", e_ok),
+                  Paragraph("Asistir a Direccion Academica para fortalecer procesos.",
+                             e_normal)]
 
     story += [
         Spacer(1, 16),
@@ -252,14 +243,16 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
 # APP PRINCIPAL
 # =============================================
 
-st.markdown("<div class='titulo-principal'>🎓 Calculadora Académica</div>",
-            unsafe_allow_html=True)
-st.markdown("<div class='subtitulo'>Cálculo de P.A.P.A. y carga horaria</div>",
-            unsafe_allow_html=True)
+st.markdown(
+    "<div class='titulo-principal'>🎓 Calculadora Académica</div>",
+    unsafe_allow_html=True)
+st.markdown(
+    "<div class='subtitulo'>Cálculo de P.A.P.A. y carga horaria</div>",
+    unsafe_allow_html=True)
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# ENTRADA DE DATOS
+# MÉTODO DE INGRESO
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Asignaturas del Semestre")
@@ -269,91 +262,53 @@ metodo = st.radio(
     ["✍️ Ingresar manualmente", "📋 Pegar desde Excel"],
     horizontal=True
 )
-
-datos_excel = []
-
-if metodo == "📋 Pegar desde Excel":
-    st.caption(
-        "Copia las celdas directamente desde Excel (columnas: Asignatura, Créditos, Nota) "
-        "y pégalas aquí. Sin encabezados."
-    )
-    texto = st.text_area(
-        "Pega aquí los datos:",
-        height=200,
-        placeholder="Cálculo diferencial\t4\t3.5\nÁlgebra lineal\t3\t4.0\nFísica I\t4\t2.8"
-    )
-    if texto.strip():
-        errores = []
-        for i, linea in enumerate(texto.strip().split("\n")):
-            partes = linea.strip().split("\t")
-            if len(partes) < 3:
-                errores.append(f"Fila {i+1}: se esperaban 3 columnas, se encontraron {len(partes)}.")
-                continue
-            try:
-                nombre   = partes[0].strip()
-                cred     = int(float(partes[1].strip()))
-                nota     = float(partes[2].strip().replace(",", "."))
-                datos_excel.append({
-                    "Asignatura":         nombre,
-                    "Creditos":           cred,
-                    "Nota":               nota,
-                    "Horas Presenciales": cred,
-                    "Horas Autonomas":    (cred * 3) - cred
-                })
-            except ValueError:
-                errores.append(f"Fila {i+1}: verifica que créditos y nota sean números.")
-
-        if errores:
-            for e in errores:
-                st.warning(e)
-        if datos_excel:
-            st.success(f"✅ {len(datos_excel)} asignaturas cargadas correctamente.")
-
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# INGRESO MANUAL
+# RECOLECCIÓN DE DATOS
 # -----------------------------------
+datos              = []
 total_presenciales = 0
 total_autonomas    = 0
-datos              = []
 
 if metodo == "✍️ Ingresar manualmente":
+
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
     num_asignaturas = st.number_input(
         "¿Cuántas asignaturas deseas ingresar?",
         min_value=1, max_value=30, step=1, value=5
     )
 
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-
     for i in range(int(num_asignaturas)):
         st.markdown(
             f"<span class='asignatura-header'>Asignatura {i+1}</span>",
-            unsafe_allow_html=True
-        )
+            unsafe_allow_html=True)
         col1, col2, col3 = st.columns([5, 1, 1])
         with col1:
-            nombre = st.text_input("Nombre", key=f"nombre_{i}",
-                                   label_visibility="collapsed",
-                                   placeholder=f"Nombre de la asignatura {i+1}")
+            nombre = st.text_input(
+                "Nombre", key=f"nombre_{i}",
+                label_visibility="collapsed",
+                placeholder=f"Nombre de la asignatura {i+1}")
         with col2:
-            creditos = st.number_input("Creditos", min_value=1, max_value=10,
-                                       step=1, key=f"creditos_{i}")
+            creditos = st.number_input(
+                "Creditos", min_value=1, max_value=10,
+                step=1, key=f"creditos_{i}")
         with col3:
-            nota = st.number_input("Nota", min_value=0.0, max_value=5.0,
-                                   step=0.1, key=f"nota_{i}")
+            nota = st.number_input(
+                "Nota", min_value=0.0, max_value=5.0,
+                step=0.1, key=f"nota_{i}")
 
-        horas_presenciales  = creditos
-        horas_autonomas     = (creditos * 3) - creditos
-        total_presenciales += horas_presenciales
-        total_autonomas    += horas_autonomas
+        h_pres = creditos
+        h_auto = (creditos * 3) - creditos
+        total_presenciales += h_pres
+        total_autonomas    += h_auto
 
         datos.append({
             "Asignatura":         nombre if nombre else f"Asignatura {i+1}",
             "Creditos":           creditos,
             "Nota":               nota,
-            "Horas Presenciales": horas_presenciales,
-            "Horas Autonomas":    horas_autonomas
+            "Horas Presenciales": h_pres,
+            "Horas Autonomas":    h_auto
         })
 
         if i < int(num_asignaturas) - 1:
@@ -361,12 +316,61 @@ if metodo == "✍️ Ingresar manualmente":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-else:
-    datos = datos_excel
+else:  # Pegar desde Excel
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.caption(
+        "Copia las celdas directamente desde Excel "
+        "(columnas en orden: Asignatura · Créditos · Nota) y pégalas aquí. "
+        "Sin fila de encabezados."
+    )
+    texto = st.text_area(
+        "Pega aquí los datos:",
+        height=200,
+        placeholder="Cálculo diferencial\t4\t3.5\nÁlgebra lineal\t3\t4.0\nFísica I\t4\t2.8"
+    )
 
-for row in datos:
-    total_presenciales += row["Horas Presenciales"]
-    total_autonomas    += row["Horas Autonomas"]
+    if texto.strip():
+        errores = []
+        for i, linea in enumerate(texto.strip().split("\n")):
+            partes = linea.strip().split("\t")
+            if len(partes) < 3:
+                errores.append(
+                    f"Fila {i+1}: se esperaban 3 columnas, "
+                    f"se encontraron {len(partes)}.")
+                continue
+            try:
+                nombre   = partes[0].strip()
+                cred     = int(float(partes[1].strip()))
+                nota     = float(partes[2].strip().replace(",", "."))
+                h_pres   = cred
+                h_auto   = (cred * 3) - cred
+                total_presenciales += h_pres
+                total_autonomas    += h_auto
+                datos.append({
+                    "Asignatura":         nombre,
+                    "Creditos":           cred,
+                    "Nota":               nota,
+                    "Horas Presenciales": h_pres,
+                    "Horas Autonomas":    h_auto
+                })
+            except ValueError:
+                errores.append(
+                    f"Fila {i+1}: verifica que créditos y nota sean números.")
+
+        if errores:
+            for e in errores:
+                st.warning(e)
+        if datos:
+            st.success(f"✅ {len(datos)} asignaturas cargadas correctamente.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------------
+# GUARDIA: sin datos no continuar
+# -----------------------------------
+if not datos:
+    st.info("Ingresa al menos una asignatura para ver los resultados.")
+    st.stop()
 
 # -----------------------------------
 # CÁLCULOS
@@ -374,7 +378,7 @@ for row in datos:
 df             = pd.DataFrame(datos)
 suma_ponderada = (df["Creditos"] * df["Nota"]).sum()
 suma_creditos  = df["Creditos"].sum()
-papa           = round(suma_ponderada / suma_creditos, 2) if suma_creditos > 0 else 0
+papa           = round(suma_ponderada / suma_creditos, 2) if suma_creditos > 0 else 0.0
 
 # -----------------------------------
 # RESUMEN
@@ -386,7 +390,6 @@ df_vista.insert(3, "Estado", df_vista["Nota"].apply(
 df_vista = df_vista.rename(columns={
     "Creditos":           "Créditos",
     "Horas Autonomas":    "Horas Autónomas",
-    "Horas Presenciales": "Horas Presenciales"
 })
 df_vista.index = [""] * len(df_vista)
 
@@ -410,37 +413,30 @@ with col_m2:
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# CONTADOR DE CRÉDITOS DISPONIBLES
+# BOLSA DE CRÉDITOS
 # -----------------------------------
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("🪙 Bolsa de Créditos Disponibles")
-st.caption(
-    "Acumula hasta 80 créditos aprobando asignaturas. "
-    "Una vez alcanzado ese tope, aprobar más materias ya no suma créditos. "
-    "Perder una materia siempre descuenta créditos, sin importar el saldo."
-)
-
-balance          = 0
-tope_alcanzado   = False
-historial        = []
+balance        = 0
+tope_alcanzado = False
+historial      = []
 
 for _, row in df.iterrows():
     if row["Nota"] >= 3.0:
         if tope_alcanzado:
             efecto = "Sin efecto (tope 80 ya alcanzado)"
             estado = "✅ Aprobó"
-            # balance no cambia
         else:
-            ganancia = row["Creditos"] * 2
+            antes    = balance
+            ganancia = int(row["Creditos"]) * 2
             balance  = min(balance + ganancia, 80)
             if balance >= 80:
                 tope_alcanzado = True
-            sumado = balance - (balance - min(ganancia, 80 - (balance - min(ganancia, 80 - balance))))
-            efecto = f"+{int(min(ganancia, 80))} → saldo {int(balance)}"
+            sumado = balance - antes
+            efecto = (f"+{sumado}" if sumado == ganancia
+                      else f"+{sumado} (tope 80)")
             estado = "✅ Aprobó"
     else:
-        balance -= row["Creditos"]
-        efecto   = f"-{int(row['Creditos'])} → saldo {int(balance)}"
+        balance -= int(row["Creditos"])
+        efecto   = f"-{int(row['Creditos'])}"
         estado   = "❌ Perdió"
 
     historial.append({
@@ -453,10 +449,14 @@ for _, row in df.iterrows():
 
 df_bolsa       = pd.DataFrame(historial)
 df_bolsa.index = [""] * len(df_bolsa)
-with st.expander("Ver detalle de movimientos de créditos"):
-    st.dataframe(df_bolsa, use_container_width=True)
 
-st.markdown("---")
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("🪙 Bolsa de Créditos Disponibles")
+st.caption(
+    "Acumula hasta 80 créditos aprobando asignaturas. "
+    "Una vez alcanzado ese tope, aprobar más materias ya no suma créditos. "
+    "Perder una materia siempre descuenta créditos."
+)
 
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -468,7 +468,13 @@ with col_b2:
         st.metric("Tope máximo", 80)
 
 if tope_alcanzado:
-    st.info("🔒 Ya alcanzaste el tope de 80 créditos. Aprobar más materias no incrementará tu bolsa, pero perder materias sí la reducirá.")
+    st.info(
+        "🔒 Ya alcanzaste el tope de 80 créditos. "
+        "Aprobar más materias no incrementará tu bolsa, "
+        "pero perder materias sí la reducirá.")
+
+with st.expander("Ver detalle de movimientos de créditos"):
+    st.dataframe(df_bolsa, use_container_width=True)
 
 st.markdown("---")
 
@@ -542,19 +548,19 @@ st.subheader("💡 Sugerencias Académicas")
 
 if suma_creditos > 0:
     for _, row in df.iterrows():
-        nota_actual = row["Nota"]
+        nota_actual = float(row["Nota"])
         if nota_actual < 3.5:
             for meta_nota in [3.0, 3.5, 4.0]:
                 if meta_nota > nota_actual:
                     nueva_sp   = (suma_ponderada
-                                  - (nota_actual * row["Creditos"])
-                                  + (meta_nota   * row["Creditos"]))
+                                  - (nota_actual      * row["Creditos"])
+                                  + (meta_nota        * row["Creditos"]))
                     nuevo_papa = nueva_sp / suma_creditos
                     if nuevo_papa >= 3.0:
                         sugerencias.append(
-                            f"Si subes **{row['Asignatura']}** de {nota_actual} "
-                            f"a {meta_nota}, tu P.A.P.A. sería aprox. "
-                            f"**{round(nuevo_papa, 2)}**."
+                            f"Si subes **{row['Asignatura']}** de "
+                            f"{nota_actual} a {meta_nota}, tu P.A.P.A. "
+                            f"sería aprox. **{round(nuevo_papa, 2)}**."
                         )
                         break
 
@@ -587,20 +593,17 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📄 Exportar Reporte")
 st.caption("Descarga un reporte completo en PDF con todos tus resultados.")
 
-if suma_creditos > 0:
-    pdf_buffer = generar_pdf(
-        df, papa,
-        total_presenciales, total_autonomas,
-        sugerencias, balance
-    )
-    st.download_button(
-        label="⬇️  Descargar Reporte PDF",
-        data=pdf_buffer,
-        file_name=f"reporte_academico_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-        mime="application/pdf"
-    )
-else:
-    st.warning("Ingresa al menos una asignatura con créditos válidos para generar el PDF.")
+pdf_buffer = generar_pdf(
+    df, papa,
+    total_presenciales, total_autonomas,
+    sugerencias, balance, tope_alcanzado
+)
+st.download_button(
+    label="⬇️  Descargar Reporte PDF",
+    data=pdf_buffer,
+    file_name=f"reporte_academico_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+    mime="application/pdf"
+)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -610,19 +613,20 @@ st.markdown("</div>", unsafe_allow_html=True)
 with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     st.markdown("""
     **Cálculo del P.A.P.A.:**
-    Se multiplica la nota de cada asignatura por sus créditos, se suman esos productos
-    y se dividen entre el total de créditos matriculados.
+    Se multiplica la nota de cada asignatura por sus créditos, se suman esos
+    productos y se dividen entre el total de créditos matriculados.
 
     **Bolsa de créditos:**
     - Si **apruebas** (nota ≥ 3.0) → suma `créditos × 2`, con tope de 80.
     - Si **pierdes** (nota < 3.0) → descuenta `créditos`.
-    - Una vez en 80, los créditos ganados no se acumulan, pero los perdidos sí se descuentan.
+    - Una vez alcanzado el tope de 80, aprobar materias ya **no suma más créditos**,
+      aunque el saldo baje después por materias perdidas.
 
     **Horas presenciales:** 1 hora semanal por cada crédito.
 
     **Horas autónomas:** 2 horas semanales adicionales por cada crédito.
 
-    **Ejemplo:** 4 créditos = 4 h presenciales + 8 h autónomas = 12 h totales por semana.
+    **Ejemplo:** 4 créditos = 4 h presenciales + 8 h autónomas = 12 h/semana.
 
     > Si tienes dificultades, acude a **Acompañamiento Académico**.
     """)
@@ -634,8 +638,7 @@ st.markdown("""
 <style>
 .footer-icons {
     position: fixed;
-    bottom: 0;
-    left: 0;
+    bottom: 0; left: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
