@@ -121,7 +121,7 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
     e_seccion   = ep('sec', fontSize=13, textColor=azul_oscuro,
                      spaceBefore=14, spaceAfter=6, fontName='Helvetica-Bold')
     e_normal    = ep('n')
-    e_footer    = ep('f',   fontSize=8,  textColor=colors.HexColor("#94a3b8"),
+    e_footer    = ep('f',   fontSize=8, textColor=colors.HexColor("#94a3b8"),
                      alignment=TA_CENTER)
     e_alerta    = ep('a',   fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
     e_ok        = ep('ok',  fontSize=10, textColor=verde, fontName='Helvetica-Bold')
@@ -195,16 +195,20 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
         ["Horas presenciales / semana",   str(int(total_presenciales))],
         ["Horas autonomas / semana",      str(int(total_autonomas))],
         ["Creditos disponibles en bolsa", str(int(balance_creditos))],
-        ["Tope de 80 alcanzado",
-         "Si" if tope_alcanzado else "No"],
+        ["Tope de 80 alcanzado",          "Si" if tope_alcanzado else "No"],
     ]
     story += [tabla_base(res, [3.5*inch, 3.0*inch]), Spacer(1, 14)]
 
-    # Sugerencias
+    # Sugerencias en PDF
     if sugerencias_texto:
-        story.append(Paragraph("Sugerencias Academicas", e_seccion))
+        story.append(Paragraph("Proyecciones de mejora del P.A.P.A.", e_seccion))
         for s in sugerencias_texto:
             story.append(Paragraph(f"- {s.replace('**','')}", e_normal))
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(
+            "Si no obtienes los resultados esperados con estas proyecciones, "
+            "busca ayuda en Direccion Academica para generar una estrategia "
+            "personalizada segun tu situacion.", e_normal))
         story.append(Spacer(1, 10))
 
     # Estado
@@ -219,7 +223,8 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
                              "Acudir a Direccion Academica.", e_normal)]
     elif papa < 3.4:
         story += [Paragraph("Estado: ZONA DE ALERTA", e_normal),
-                  Paragraph("Visitar Direccion Academica para plan de mejora.", e_normal)]
+                  Paragraph("Visitar Direccion Academica para trazar un plan de mejora.",
+                             e_normal)]
     else:
         story += [Paragraph("Estado: ZONA ESTABLE", e_ok),
                   Paragraph("Asistir a Direccion Academica para fortalecer procesos.",
@@ -256,7 +261,6 @@ st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Asignaturas del Semestre")
-
 metodo = st.radio(
     "¿Cómo deseas ingresar las asignaturas?",
     ["✍️ Ingresar manualmente", "📋 Pegar desde Excel"],
@@ -276,7 +280,7 @@ if metodo == "✍️ Ingresar manualmente":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     num_asignaturas = st.number_input(
         "¿Cuántas asignaturas deseas ingresar?",
-        min_value=1, max_value=300, step=1, value=5
+        min_value=1, max_value=30, step=1, value=5
     )
 
     for i in range(int(num_asignaturas)):
@@ -316,7 +320,7 @@ if metodo == "✍️ Ingresar manualmente":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-else:  # Pegar desde Excel
+else:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.caption(
         "Copia las celdas directamente desde Excel "
@@ -388,8 +392,8 @@ df_vista.insert(3, "Estado", df_vista["Nota"].apply(
     lambda n: "✅ Aprobó" if n >= 3.0 else "❌ Perdió"
 ))
 df_vista = df_vista.rename(columns={
-    "Creditos":           "Créditos",
-    "Horas Autonomas":    "Horas Autónomas",
+    "Creditos":        "Créditos",
+    "Horas Autonomas": "Horas Autónomas",
 })
 df_vista.index = [""] * len(df_vista)
 
@@ -456,6 +460,12 @@ st.caption(
     "Acumula hasta 80 créditos aprobando asignaturas. "
     "Una vez alcanzado ese tope, aprobar más materias ya no suma créditos. "
     "Perder una materia siempre descuenta créditos."
+)
+st.warning(
+    "⚠️ **Este ítem no se calcula con precisión**, debido a que hay cancelaciones "
+    "y pérdidas de créditos que también descuentan y no están reflejadas aquí. "
+    "**Este ítem es solo informativo** para que tengas presente tu proceso. "
+    "A partir de esto, revisa el **SIA** para verificar cuáles son tus créditos disponibles."
 )
 
 col_b1, col_b2 = st.columns(2)
@@ -547,28 +557,130 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("💡 Sugerencias Académicas")
 
 if suma_creditos > 0:
+
+    en_riesgo  = df[df["Nota"] < 3.0]
+    en_alerta  = df[(df["Nota"] >= 3.0) & (df["Nota"] < 3.5)]
+    destacadas = df[df["Nota"] >= 4.0]
+
+    # Métricas rápidas
+    col_s1, col_s2, col_s3 = st.columns(3)
+    with col_s1:
+        st.metric(
+            "En riesgo (< 3.0)", len(en_riesgo),
+            delta=f"-{len(en_riesgo)} materias" if len(en_riesgo) > 0 else None,
+            delta_color="inverse"
+        )
+    with col_s2:
+        st.metric("En alerta (3.0 – 3.4)", len(en_alerta))
+    with col_s3:
+        st.metric("Destacadas (≥ 4.0)", len(destacadas))
+
+    st.markdown("---")
+
+    # Asignaturas perdidas
+    if not en_riesgo.empty:
+        st.error("#### 🔴 Asignaturas en riesgo de pérdida")
+        for _, row in en_riesgo.iterrows():
+            puntos_faltantes = round(3.0 - float(row["Nota"]), 1)
+            st.markdown(
+                f"- ❌ **{row['Asignatura']}** — nota actual: `{row['Nota']}` · "
+                f"Te faltan **{puntos_faltantes} puntos** para aprobar. "
+                f"Prioriza esta materia y busca apoyo en **Dirección Académica**."
+            )
+        st.markdown("")
+
+    # Asignaturas en alerta
+    if not en_alerta.empty:
+        st.warning("#### 🟠 Asignaturas en zona de alerta")
+        for _, row in en_alerta.iterrows():
+            puntos_mejora = round(3.5 - float(row["Nota"]), 1)
+            st.markdown(
+                f"- ⚠️ **{row['Asignatura']}** — nota actual: `{row['Nota']}` · "
+                f"Con **{puntos_mejora} puntos más** llegarías a 3.5 "
+                f"y mejorarías tu P.A.P.A. notablemente."
+            )
+        st.markdown("")
+
+    # Proyecciones de mejora
+    st.info("#### 📈 Proyecciones de mejora del P.A.P.A.")
+    encontro_proyeccion = False
+
     for _, row in df.iterrows():
         nota_actual = float(row["Nota"])
-        if nota_actual < 3.5:
-            for meta_nota in [3.0, 3.5, 4.0]:
+        if nota_actual < 4.5:
+            for meta_nota in [3.0, 3.5, 4.0, 4.5]:
                 if meta_nota > nota_actual:
                     nueva_sp   = (suma_ponderada
-                                  - (nota_actual      * row["Creditos"])
-                                  + (meta_nota        * row["Creditos"]))
+                                  - (nota_actual * row["Creditos"])
+                                  + (meta_nota   * row["Creditos"]))
                     nuevo_papa = nueva_sp / suma_creditos
                     if nuevo_papa >= 3.0:
-                        sugerencias.append(
-                            f"Si subes **{row['Asignatura']}** de "
-                            f"{nota_actual} a {meta_nota}, tu P.A.P.A. "
-                            f"sería aprox. **{round(nuevo_papa, 2)}**."
+                        diferencia = round(nuevo_papa - papa, 2)
+                        signo      = "+" if diferencia >= 0 else ""
+                        impacto    = (
+                            "impacto alto 🚀" if abs(diferencia) >= 0.3 else
+                            "impacto medio 📊" if abs(diferencia) >= 0.1 else
+                            "impacto leve 📌"
                         )
+                        sugerencias.append(
+                            f"Si subes **{row['Asignatura']}** de {nota_actual} "
+                            f"a **{meta_nota}** → P.A.P.A. aprox. **{round(nuevo_papa, 2)}** "
+                            f"({signo}{diferencia} puntos · {impacto})"
+                        )
+                        encontro_proyeccion = True
                         break
 
-    if sugerencias:
+    if encontro_proyeccion:
         for s in sugerencias:
             st.markdown(f"- {s}")
+        st.markdown("")
+        st.markdown(
+            "> 📌 **Si no obtienes los resultados esperados con estas proyecciones, "
+            "busca ayuda en Dirección Académica para generar una estrategia "
+            "personalizada según tu situación académica.**"
+        )
     else:
-        st.info("No se encontraron ajustes relevantes para mejorar el P.A.P.A.")
+        st.success(
+            "✅ Tu P.A.P.A. ya está en una zona sólida. "
+            "No se encontraron ajustes críticos necesarios."
+        )
+
+    st.markdown("---")
+
+    # Plan de acción según nivel del PAPA
+    st.markdown("#### 🗺️ Plan de Acción Sugerido")
+
+    if papa < 2.7:
+        st.error(
+            "**Situación crítica.** Tu P.A.P.A. está por debajo del mínimo institucional. "
+            "Es urgente que te acerques a **Dirección Académica** para:\n"
+            "- Conocer el proceso de solicitud de excepcionalidad.\n"
+            "- Identificar las asignaturas prioritarias a recuperar.\n"
+            "- Construir un plan semestre a semestre para estabilizar tu promedio."
+        )
+    elif papa < 3.0:
+        st.warning(
+            "**Situación de riesgo.** Estás cerca del límite. En **Dirección Académica** puedes:\n"
+            "- Solicitar orientación para el proceso de reingreso si aplica.\n"
+            "- Diseñar un plan de mejora enfocado en las materias con mayor peso en créditos.\n"
+            "- Explorar estrategias de estudio y gestión del tiempo."
+        )
+    elif papa < 3.4:
+        st.info(
+            "**Zona de alerta.** Estás aprobando, pero hay margen importante de mejora. "
+            "En **Dirección Académica** puedes:\n"
+            "- Trazar un plan para subir el P.A.P.A. al menos a 3.5.\n"
+            "- Identificar las asignaturas donde un pequeño esfuerzo genera mayor impacto.\n"
+            "- Acceder a tutorías o acompañamiento académico."
+        )
+    else:
+        st.success(
+            "**Vas bien.** Tu P.A.P.A. está en zona estable. Para mantenerlo y mejorarlo:\n"
+            "- Prioriza las asignaturas en alerta antes de que afecten el promedio.\n"
+            "- Consulta en **Dirección Académica** estrategias para alcanzar y mantener "
+            "un P.A.P.A. de 4.0 o más.\n"
+            "- Considera opciones como monitorias o semilleros de investigación."
+        )
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -621,6 +733,7 @@ with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     - Si **pierdes** (nota < 3.0) → descuenta `créditos`.
     - Una vez alcanzado el tope de 80, aprobar materias ya **no suma más créditos**,
       aunque el saldo baje después por materias perdidas.
+    - Este cálculo es orientativo. Verifica siempre en el **SIA**.
 
     **Horas presenciales:** 1 hora semanal por cada crédito.
 
