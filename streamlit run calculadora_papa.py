@@ -223,102 +223,50 @@ st.markdown("<div class='subtitulo'>P.A.P.A. por periodo y global</div>",
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# MÉTODO DE INGRESO
-# -----------------------------------
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📚 Ingreso de Asignaturas")
-metodo = st.radio(
-    "¿Cómo deseas ingresar las asignaturas?",
-    ["✍️ Manualmente", "📋 Pegar desde Excel"],
-    horizontal=True
-)
-st.markdown("</div>", unsafe_allow_html=True)
-
-# -----------------------------------
-# RECOLECCIÓN
+# INGRESO DE ASIGNATURAS
 # -----------------------------------
 datos = []
 
-if metodo == "✍️ Manualmente":
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("📚 Ingreso de Asignaturas")
 
-    num = st.number_input("¿Cuántas asignaturas deseas ingresar?",
-                          min_value=1, max_value=60, step=1, value=5)
+num = st.number_input("¿Cuántas asignaturas deseas ingresar?",
+                      min_value=1, max_value=60, step=1, value=5)
 
-    for i in range(int(num)):
-        st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>",
-                    unsafe_allow_html=True)
-        c1, c2, c3, c4 = st.columns([4, 1, 1, 2])
-        with c1:
-            nombre = st.text_input("Nombre", key=f"n_{i}",
-                                   label_visibility="collapsed",
-                                   placeholder=f"Nombre de la asignatura {i+1}")
-        with c2:
-            creditos = st.number_input("Cred.", min_value=1, max_value=10,
-                                       step=1, key=f"c_{i}",
-                                       label_visibility="visible")
-        with c3:
-            nota = st.number_input("Nota", min_value=0.0, max_value=5.0,
-                                   step=0.1, key=f"nota_{i}",
+for i in range(int(num)):
+    st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>",
+                unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns([4, 1, 1, 2])
+    with c1:
+        nombre = st.text_input("Nombre", key=f"n_{i}",
+                               label_visibility="collapsed",
+                               placeholder=f"Nombre de la asignatura {i+1}")
+    with c2:
+        creditos = st.number_input("Cred.", min_value=1, max_value=10,
+                                   step=1, key=f"c_{i}",
                                    label_visibility="visible")
-        with c4:
-            periodo = st.text_input("Periodo", key=f"p_{i}",
-                                    label_visibility="visible",
-                                    placeholder="Ej: 2024-1")
+    with c3:
+        nota = st.number_input("Nota", min_value=0.0, max_value=5.0,
+                               step=0.1, key=f"nota_{i}",
+                               label_visibility="visible")
+    with c4:
+        periodo = st.text_input("Periodo", key=f"p_{i}",
+                                label_visibility="visible",
+                                placeholder="Ej: 2024-1")
 
-        datos.append({
-            "Asignatura": nombre if nombre else f"Asignatura {i+1}",
-            "Creditos":   creditos,
-            "Nota":       nota,
-            "Periodo":    periodo.strip() if periodo.strip() else "Sin periodo",
-            "Horas Presenciales": creditos,
-            "Horas Autonomas":    (creditos * 3) - creditos
-        })
+    datos.append({
+        "Asignatura":         nombre if nombre else f"Asignatura {i+1}",
+        "Creditos":           creditos,
+        "Nota":               nota,
+        "Periodo":            periodo.strip() if periodo.strip() else "Sin periodo",
+        "Horas Presenciales": creditos,
+        "Horas Autonomas":    (creditos * 3) - creditos
+    })
 
-        if i < int(num) - 1:
-            st.markdown("---")
+    if i < int(num) - 1:
+        st.markdown("---")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-else:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.caption(
-        "Copia desde Excel con columnas en orden: "
-        "**Asignatura · Créditos · Nota · Periodo** — sin encabezados."
-    )
-    texto = st.text_area("Pega aquí los datos:", height=200,
-                         placeholder="Cálculo diferencial\t4\t3.5\t2023-2\n"
-                                     "Álgebra lineal\t3\t4.0\t2023-2\n"
-                                     "Física I\t4\t2.8\t2024-1")
-    if texto.strip():
-        errores = []
-        for i, linea in enumerate(texto.strip().split("\n")):
-            partes = linea.strip().split("\t")
-            if len(partes) < 4:
-                errores.append(f"Fila {i+1}: se esperaban 4 columnas, "
-                               f"se encontraron {len(partes)}.")
-                continue
-            try:
-                nombre   = partes[0].strip()
-                cred     = int(float(partes[1].strip()))
-                nota     = float(partes[2].strip().replace(",", "."))
-                periodo  = partes[3].strip()
-                datos.append({
-                    "Asignatura":         nombre,
-                    "Creditos":           cred,
-                    "Nota":               nota,
-                    "Periodo":            periodo if periodo else "Sin periodo",
-                    "Horas Presenciales": cred,
-                    "Horas Autonomas":    (cred * 3) - cred
-                })
-            except ValueError:
-                errores.append(f"Fila {i+1}: verifica créditos y nota.")
-        if errores:
-            for e in errores:
-                st.warning(e)
-        if datos:
-            st.success(f"✅ {len(datos)} asignaturas cargadas correctamente.")
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
 # GUARDIA
@@ -591,6 +539,11 @@ st.download_button(
     data=pdf_buffer,
     file_name=f"reporte_academico_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
     mime="application/pdf"
+)
+st.markdown(
+    "📄 Para más información sobre el cálculo del P.A.P.A. y créditos disponibles, "
+    "consulta el [Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983).",
+    unsafe_allow_html=False
 )
 st.markdown("</div>", unsafe_allow_html=True)
 
