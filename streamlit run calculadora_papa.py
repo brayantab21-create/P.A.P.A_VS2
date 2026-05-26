@@ -20,9 +20,6 @@ st.set_page_config(
     page_icon="🎓"
 )
 
-# -----------------------------------
-# ESTILOS CSS
-# -----------------------------------
 st.markdown("""
 <style>
     .stApp { background-color: #1A1616; }
@@ -88,25 +85,23 @@ st.markdown("""
 
 
 # -----------------------------------
-# FUNCIÓN PARA GENERAR PDF
+# PDF
 # -----------------------------------
-def generar_pdf(df, papa, total_presenciales, total_autonomas,
-                sugerencias_texto, balance_creditos, tope_alcanzado):
+def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
+                df_ultimo, sugerencias, total_pres, total_auto):
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer, pagesize=letter,
-        rightMargin=0.75*inch, leftMargin=0.75*inch,
-        topMargin=0.75*inch, bottomMargin=0.75*inch
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
+                            rightMargin=0.75*inch, leftMargin=0.75*inch,
+                            topMargin=0.75*inch, bottomMargin=0.75*inch)
     story = []
 
-    azul_oscuro = colors.HexColor("#1a2e5a")
-    azul_medio  = colors.HexColor("#4f8ef7")
-    gris_claro  = colors.HexColor("#f0f4f8")
-    gris_borde  = colors.HexColor("#e2e8f0")
-    rojo        = colors.HexColor("#e74c3c")
-    verde       = colors.HexColor("#27ae60")
+    azul  = colors.HexColor("#1a2e5a")
+    medio = colors.HexColor("#4f8ef7")
+    gris  = colors.HexColor("#f0f4f8")
+    borde = colors.HexColor("#e2e8f0")
+    rojo  = colors.HexColor("#e74c3c")
+    verde = colors.HexColor("#27ae60")
 
     def ep(name, **kw):
         base = dict(fontSize=10, textColor=colors.HexColor("#2d3748"),
@@ -114,129 +109,102 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
         base.update(kw)
         return ParagraphStyle(name, **base)
 
-    e_titulo    = ep('t',   fontSize=20, textColor=azul_oscuro,
-                     alignment=TA_CENTER, spaceAfter=4, fontName='Helvetica-Bold')
-    e_subtitulo = ep('s',   fontSize=11, textColor=colors.HexColor("#5a6a7e"),
-                     alignment=TA_CENTER, spaceAfter=16)
-    e_seccion   = ep('sec', fontSize=13, textColor=azul_oscuro,
-                     spaceBefore=14, spaceAfter=6, fontName='Helvetica-Bold')
-    e_normal    = ep('n')
-    e_footer    = ep('f',   fontSize=8, textColor=colors.HexColor("#94a3b8"),
-                     alignment=TA_CENTER)
-    e_alerta    = ep('a',   fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
-    e_ok        = ep('ok',  fontSize=10, textColor=verde, fontName='Helvetica-Bold')
+    et = ep('t',  fontSize=20, textColor=azul, alignment=TA_CENTER,
+            spaceAfter=4, fontName='Helvetica-Bold')
+    es = ep('s',  fontSize=11, textColor=colors.HexColor("#5a6a7e"),
+            alignment=TA_CENTER, spaceAfter=16)
+    ec = ep('c',  fontSize=13, textColor=azul, spaceBefore=14,
+            spaceAfter=6, fontName='Helvetica-Bold')
+    en = ep('n')
+    ef = ep('f',  fontSize=8, textColor=colors.HexColor("#94a3b8"),
+            alignment=TA_CENTER)
+    ea = ep('a',  fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
+    eok= ep('ok', fontSize=10, textColor=verde, fontName='Helvetica-Bold')
 
-    def tabla_base(data, col_widths):
-        t = Table(data, colWidths=col_widths)
+    def tbl(data, widths):
+        t = Table(data, colWidths=widths)
         t.setStyle(TableStyle([
-            ('BACKGROUND',     (0,0), (-1,0), azul_oscuro),
-            ('TEXTCOLOR',      (0,0), (-1,0), colors.white),
-            ('FONTNAME',       (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE',       (0,0), (-1,-1), 9),
-            ('ALIGN',          (0,0), (-1,-1), 'CENTER'),
-            ('VALIGN',         (0,0), (-1,-1), 'MIDDLE'),
-            ('ROWBACKGROUNDS', (0,1), (-1,-1), [gris_claro, colors.white]),
-            ('GRID',           (0,0), (-1,-1), 0.5, gris_borde),
-            ('TOPPADDING',     (0,0), (-1,-1), 7),
-            ('BOTTOMPADDING',  (0,0), (-1,-1), 7),
+            ('BACKGROUND',     (0,0),(-1,0), azul),
+            ('TEXTCOLOR',      (0,0),(-1,0), colors.white),
+            ('FONTNAME',       (0,0),(-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE',       (0,0),(-1,-1), 9),
+            ('ALIGN',          (0,0),(-1,-1), 'CENTER'),
+            ('VALIGN',         (0,0),(-1,-1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0,1),(-1,-1), [gris, colors.white]),
+            ('GRID',           (0,0),(-1,-1), 0.5, borde),
+            ('TOPPADDING',     (0,0),(-1,-1), 7),
+            ('BOTTOMPADDING',  (0,0),(-1,-1), 7),
         ]))
         return t
 
     story += [
-        Paragraph("Calculadora Academica", e_titulo),
-        Paragraph("Reporte de P.A.P.A. y Carga Horaria", e_subtitulo),
-        HRFlowable(width="100%", thickness=2, color=azul_medio),
+        Paragraph("Calculadora Academica", et),
+        Paragraph("Reporte de P.A.P.A. por Periodo y Global", es),
+        HRFlowable(width="100%", thickness=2, color=medio),
         Spacer(1, 12),
-        Paragraph(
-            f"Fecha de generacion: {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-            e_normal),
+        Paragraph(f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", en),
         Spacer(1, 10),
     ]
 
-    # Tabla asignaturas
-    story.append(Paragraph("Asignaturas", e_seccion))
-    enc = ["Asignatura", "Creditos", "Nota", "Estado",
-           "H. Presenciales", "H. Autonomas"]
+    # PAPA por periodo
+    story.append(Paragraph("P.A.P.A. por Periodo", ec))
+    rows = [["Periodo", "Creditos", "P.A.P.A."]]
+    for p, vals in sorted(papas_periodo.items()):
+        rows.append([str(p), str(vals['creditos']), str(vals['papa'])])
+    rows.append(["GLOBAL", str(int(df["Creditos"].sum())), str(papa_global)])
+    story += [tbl(rows, [3*inch, 1.5*inch, 1.5*inch]), Spacer(1, 14)]
+
+    # Asignaturas ultimo periodo
+    story.append(Paragraph(f"Asignaturas - Ultimo Periodo ({ultimo_periodo})", ec))
+    enc = ["Asignatura", "Cred.", "Nota", "Estado"]
     filas = [enc]
-    for _, row in df.iterrows():
-        aprueba = row["Nota"] >= 3.0
+    for _, row in df_ultimo.iterrows():
         filas.append([
             str(row["Asignatura"]),
             str(int(row["Creditos"])),
             str(round(float(row["Nota"]), 1)),
-            "Aprobo" if aprueba else "Perdio",
-            str(int(row["Horas Presenciales"])),
-            str(int(row["Horas Autonomas"])),
+            "Aprobo" if row["Nota"] >= 3.0 else "Perdio"
         ])
-    col_w = [2.0*inch, 0.75*inch, 0.65*inch, 0.75*inch, 1.1*inch, 1.05*inch]
-    t_asig = Table(filas, colWidths=col_w)
-    t_asig.setStyle(TableStyle([
-        ('BACKGROUND',     (0,0), (-1,0), azul_oscuro),
-        ('TEXTCOLOR',      (0,0), (-1,0), colors.white),
-        ('FONTNAME',       (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE',       (0,0), (-1,-1), 9),
-        ('ALIGN',          (0,0), (-1,-1), 'CENTER'),
-        ('ALIGN',          (0,1), (0,-1), 'LEFT'),
-        ('VALIGN',         (0,0), (-1,-1), 'MIDDLE'),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [gris_claro, colors.white]),
-        ('GRID',           (0,0), (-1,-1), 0.5, gris_borde),
-        ('TOPPADDING',     (0,0), (-1,-1), 6),
-        ('BOTTOMPADDING',  (0,0), (-1,-1), 6),
-        ('LEFTPADDING',    (0,1), (0,-1), 6),
-    ]))
-    story += [t_asig, Spacer(1, 14)]
+    story += [tbl(filas, [3.0*inch, 0.8*inch, 0.8*inch, 1.0*inch]), Spacer(1, 14)]
 
-    # Resultados
-    story.append(Paragraph("Resultados", e_seccion))
-    res = [
-        ["Indicador", "Valor"],
-        ["P.A.P.A. del semestre",         str(round(papa, 2))],
-        ["Total creditos matriculados",   str(int(df["Creditos"].sum()))],
-        ["Horas presenciales / semana",   str(int(total_presenciales))],
-        ["Horas autonomas / semana",      str(int(total_autonomas))],
-        ["Creditos disponibles en bolsa", str(int(balance_creditos))],
-        ["Tope de 80 alcanzado",          "Si" if tope_alcanzado else "No"],
-    ]
-    story += [tabla_base(res, [3.5*inch, 3.0*inch]), Spacer(1, 14)]
+    # Carga horaria ultimo periodo
+    story.append(Paragraph(f"Carga Horaria - Ultimo Periodo ({ultimo_periodo})", ec))
+    ch = [["Horas Presenciales / semana", "Horas Autonomas / semana"],
+          [str(int(total_pres)), str(int(total_auto))]]
+    story += [tbl(ch, [3.25*inch, 3.25*inch]), Spacer(1, 14)]
 
-    # Sugerencias en PDF
-    if sugerencias_texto:
-        story.append(Paragraph("Proyecciones de mejora del P.A.P.A.", e_seccion))
-        for s in sugerencias_texto:
-            story.append(Paragraph(f"- {s.replace('**','')}", e_normal))
+    # Sugerencias
+    if sugerencias:
+        story.append(Paragraph("Proyecciones de Mejora (Ultimo Periodo)", ec))
+        for s in sugerencias:
+            story.append(Paragraph(f"- {s.replace('**','')}", en))
         story.append(Spacer(1, 6))
         story.append(Paragraph(
-            "Si no obtienes los resultados esperados con estas proyecciones, "
-            "busca ayuda en Direccion Academica para generar una estrategia "
-            "personalizada segun tu situacion.", e_normal))
+            "Si no obtienes los resultados esperados, busca ayuda en "
+            "Direccion Academica para generar una estrategia personalizada.", en))
         story.append(Spacer(1, 10))
 
-    # Estado
-    story.append(Paragraph("Estado Academico", e_seccion))
-    if papa < 2.7:
-        story += [Paragraph("Estado: RIESGO ALTO", e_alerta),
+    # Estado academico
+    story.append(Paragraph("Estado Academico (P.A.P.A. Global)", ec))
+    if papa_global < 2.7:
+        story += [Paragraph("Estado: RIESGO ALTO", ea),
                   Paragraph("Solicitar excepcionalidad ante el Consejo Superior "
-                             "Universitario. Acudir a Direccion Academica.", e_normal)]
-    elif papa < 3.0:
-        story += [Paragraph("Estado: RIESGO MODERADO", e_normal),
-                  Paragraph("Solicitar reingreso ante el Consejo de Facultad. "
-                             "Acudir a Direccion Academica.", e_normal)]
-    elif papa < 3.4:
-        story += [Paragraph("Estado: ZONA DE ALERTA", e_normal),
-                  Paragraph("Visitar Direccion Academica para trazar un plan de mejora.",
-                             e_normal)]
+                             "Universitario. Acudir a Direccion Academica.", en)]
+    elif papa_global < 3.0:
+        story += [Paragraph("Estado: RIESGO MODERADO", en),
+                  Paragraph("Solicitar reingreso ante el Consejo de Facultad.", en)]
+    elif papa_global < 3.4:
+        story += [Paragraph("Estado: ZONA DE ALERTA", en),
+                  Paragraph("Visitar Direccion Academica para plan de mejora.", en)]
     else:
-        story += [Paragraph("Estado: ZONA ESTABLE", e_ok),
-                  Paragraph("Asistir a Direccion Academica para fortalecer procesos.",
-                             e_normal)]
+        story += [Paragraph("Estado: ZONA ESTABLE", eok),
+                  Paragraph("Asistir a Direccion Academica para fortalecer procesos.", en)]
 
     story += [
         Spacer(1, 16),
-        HRFlowable(width="100%", thickness=1, color=gris_borde),
+        HRFlowable(width="100%", thickness=1, color=borde),
         Spacer(1, 6),
-        Paragraph(
-            "Documento generado por la Calculadora Academica - Direccion Academica",
-            e_footer)
+        Paragraph("Documento generado por la Calculadora Academica - Direccion Academica", ef)
     ]
 
     doc.build(story)
@@ -245,77 +213,69 @@ def generar_pdf(df, papa, total_presenciales, total_autonomas,
 
 
 # =============================================
-# APP PRINCIPAL
+# APP
 # =============================================
 
-st.markdown(
-    "<div class='titulo-principal'>🎓 Calculadora Académica</div>",
-    unsafe_allow_html=True)
-st.markdown(
-    "<div class='subtitulo'>Cálculo de P.A.P.A. y carga horaria</div>",
-    unsafe_allow_html=True)
+st.markdown("<div class='titulo-principal'>🎓 Calculadora Académica</div>",
+            unsafe_allow_html=True)
+st.markdown("<div class='subtitulo'>P.A.P.A. por periodo y global</div>",
+            unsafe_allow_html=True)
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
 # -----------------------------------
 # MÉTODO DE INGRESO
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📚 Asignaturas del Semestre")
+st.subheader("📚 Ingreso de Asignaturas")
 metodo = st.radio(
     "¿Cómo deseas ingresar las asignaturas?",
-    ["✍️ Ingresar manualmente", "📋 Pegar desde Excel"],
+    ["✍️ Manualmente", "📋 Pegar desde Excel"],
     horizontal=True
 )
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# RECOLECCIÓN DE DATOS
+# RECOLECCIÓN
 # -----------------------------------
-datos              = []
-total_presenciales = 0
-total_autonomas    = 0
+datos = []
 
-if metodo == "✍️ Ingresar manualmente":
-
+if metodo == "✍️ Manualmente":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    num_asignaturas = st.number_input(
-        "¿Cuántas asignaturas deseas ingresar?",
-        min_value=1, max_value=30, step=1, value=5
-    )
 
-    for i in range(int(num_asignaturas)):
-        st.markdown(
-            f"<span class='asignatura-header'>Asignatura {i+1}</span>",
-            unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([5, 1, 1])
-        with col1:
-            nombre = st.text_input(
-                "Nombre", key=f"nombre_{i}",
-                label_visibility="collapsed",
-                placeholder=f"Nombre de la asignatura {i+1}")
-        with col2:
-            creditos = st.number_input(
-                "Creditos", min_value=1, max_value=10,
-                step=1, key=f"creditos_{i}")
-        with col3:
-            nota = st.number_input(
-                "Nota", min_value=0.0, max_value=5.0,
-                step=0.1, key=f"nota_{i}")
+    num = st.number_input("¿Cuántas asignaturas deseas ingresar?",
+                          min_value=1, max_value=60, step=1, value=5)
 
-        h_pres = creditos
-        h_auto = (creditos * 3) - creditos
-        total_presenciales += h_pres
-        total_autonomas    += h_auto
+    for i in range(int(num)):
+        st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>",
+                    unsafe_allow_html=True)
+        c1, c2, c3, c4 = st.columns([4, 1, 1, 2])
+        with c1:
+            nombre = st.text_input("Nombre", key=f"n_{i}",
+                                   label_visibility="collapsed",
+                                   placeholder=f"Nombre de la asignatura {i+1}")
+        with c2:
+            creditos = st.number_input("Cred.", min_value=1, max_value=10,
+                                       step=1, key=f"c_{i}",
+                                       label_visibility="visible")
+        with c3:
+            nota = st.number_input("Nota", min_value=0.0, max_value=5.0,
+                                   step=0.1, key=f"nota_{i}",
+                                   label_visibility="visible")
+        with c4:
+            periodo = st.text_input("Periodo", key=f"p_{i}",
+                                    label_visibility="visible",
+                                    placeholder="Ej: 2024-1")
 
         datos.append({
-            "Asignatura":         nombre if nombre else f"Asignatura {i+1}",
-            "Creditos":           creditos,
-            "Nota":               nota,
-            "Horas Presenciales": h_pres,
-            "Horas Autonomas":    h_auto
+            "Asignatura": nombre if nombre else f"Asignatura {i+1}",
+            "Creditos":   creditos,
+            "Nota":       nota,
+            "Periodo":    periodo.strip() if periodo.strip() else "Sin periodo",
+            "Horas Presenciales": creditos,
+            "Horas Autonomas":    (creditos * 3) - creditos
         })
 
-        if i < int(num_asignaturas) - 1:
+        if i < int(num) - 1:
             st.markdown("---")
 
     st.markdown("</div>", unsafe_allow_html=True)
@@ -323,54 +283,45 @@ if metodo == "✍️ Ingresar manualmente":
 else:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.caption(
-        "Copia las celdas directamente desde Excel "
-        "(columnas en orden: Asignatura · Créditos · Nota) y pégalas aquí. "
-        "Sin fila de encabezados."
+        "Copia desde Excel con columnas en orden: "
+        "**Asignatura · Créditos · Nota · Periodo** — sin encabezados."
     )
-    texto = st.text_area(
-        "Pega aquí los datos:",
-        height=200,
-        placeholder="Cálculo diferencial\t4\t3.5\nÁlgebra lineal\t3\t4.0\nFísica I\t4\t2.8"
-    )
-
+    texto = st.text_area("Pega aquí los datos:", height=200,
+                         placeholder="Cálculo diferencial\t4\t3.5\t2023-2\n"
+                                     "Álgebra lineal\t3\t4.0\t2023-2\n"
+                                     "Física I\t4\t2.8\t2024-1")
     if texto.strip():
         errores = []
         for i, linea in enumerate(texto.strip().split("\n")):
             partes = linea.strip().split("\t")
-            if len(partes) < 3:
-                errores.append(
-                    f"Fila {i+1}: se esperaban 3 columnas, "
-                    f"se encontraron {len(partes)}.")
+            if len(partes) < 4:
+                errores.append(f"Fila {i+1}: se esperaban 4 columnas, "
+                               f"se encontraron {len(partes)}.")
                 continue
             try:
                 nombre   = partes[0].strip()
                 cred     = int(float(partes[1].strip()))
                 nota     = float(partes[2].strip().replace(",", "."))
-                h_pres   = cred
-                h_auto   = (cred * 3) - cred
-                total_presenciales += h_pres
-                total_autonomas    += h_auto
+                periodo  = partes[3].strip()
                 datos.append({
                     "Asignatura":         nombre,
                     "Creditos":           cred,
                     "Nota":               nota,
-                    "Horas Presenciales": h_pres,
-                    "Horas Autonomas":    h_auto
+                    "Periodo":            periodo if periodo else "Sin periodo",
+                    "Horas Presenciales": cred,
+                    "Horas Autonomas":    (cred * 3) - cred
                 })
             except ValueError:
-                errores.append(
-                    f"Fila {i+1}: verifica que créditos y nota sean números.")
-
+                errores.append(f"Fila {i+1}: verifica créditos y nota.")
         if errores:
             for e in errores:
                 st.warning(e)
         if datos:
             st.success(f"✅ {len(datos)} asignaturas cargadas correctamente.")
-
     st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# GUARDIA: sin datos no continuar
+# GUARDIA
 # -----------------------------------
 if not datos:
     st.info("Ingresa al menos una asignatura para ver los resultados.")
@@ -379,163 +330,127 @@ if not datos:
 # -----------------------------------
 # CÁLCULOS
 # -----------------------------------
-df             = pd.DataFrame(datos)
-suma_ponderada = (df["Creditos"] * df["Nota"]).sum()
-suma_creditos  = df["Creditos"].sum()
-papa           = round(suma_ponderada / suma_creditos, 2) if suma_creditos > 0 else 0.0
+df = pd.DataFrame(datos)
+
+# PAPA global
+suma_pond_global = (df["Creditos"] * df["Nota"]).sum()
+suma_cred_global = df["Creditos"].sum()
+papa_global      = round(suma_pond_global / suma_cred_global, 3) if suma_cred_global > 0 else 0.0
+
+# PAPA por periodo
+periodos_ordenados = sorted(df["Periodo"].unique())
+ultimo_periodo     = periodos_ordenados[-1]
+
+papas_periodo = {}
+for p in periodos_ordenados:
+    sub  = df[df["Periodo"] == p]
+    sp   = (sub["Creditos"] * sub["Nota"]).sum()
+    sc   = sub["Creditos"].sum()
+    papas_periodo[p] = {
+        "papa":     round(sp / sc, 3) if sc > 0 else 0.0,
+        "creditos": int(sc)
+    }
+
+# Último periodo
+df_ultimo    = df[df["Periodo"] == ultimo_periodo].copy()
+sp_ultimo    = (df_ultimo["Creditos"] * df_ultimo["Nota"]).sum()
+sc_ultimo    = df_ultimo["Creditos"].sum()
+papa_ultimo  = round(sp_ultimo / sc_ultimo, 3) if sc_ultimo > 0 else 0.0
+total_pres   = int(df_ultimo["Horas Presenciales"].sum())
+total_auto   = int(df_ultimo["Horas Autonomas"].sum())
 
 # -----------------------------------
-# RESUMEN
+# RESUMEN POR PERIODO
 # -----------------------------------
-df_vista = df.copy()
-df_vista.insert(3, "Estado", df_vista["Nota"].apply(
-    lambda n: "✅ Aprobó" if n >= 3.0 else "❌ Perdió"
-))
-df_vista = df_vista.rename(columns={
-    "Creditos":        "Créditos",
-    "Horas Autonomas": "Horas Autónomas",
-})
-df_vista.index = [""] * len(df_vista)
-
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📊 Resumen Académico")
-st.dataframe(df_vista, use_container_width=True)
-st.markdown("</div>", unsafe_allow_html=True)
+st.subheader("📊 P.A.P.A. por Periodo")
 
-# -----------------------------------
-# MÉTRICAS P.A.P.A.
-# -----------------------------------
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("🎯 Resultados P.A.P.A.")
-
-col_m1, col_m2 = st.columns(2)
-with col_m1:
-    st.metric("P.A.P.A. del Semestre", papa)
-with col_m2:
-    st.metric("Total Créditos Matriculados", int(suma_creditos))
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# -----------------------------------
-# BOLSA DE CRÉDITOS
-# -----------------------------------
-balance        = 0
-tope_alcanzado = False
-historial      = []
-
-for _, row in df.iterrows():
-    if row["Nota"] >= 3.0:
-        if tope_alcanzado:
-            efecto = "Sin efecto (tope 80 ya alcanzado)"
-            estado = "✅ Aprobó"
-        else:
-            antes    = balance
-            ganancia = int(row["Creditos"]) * 2
-            balance  = min(balance + ganancia, 80)
-            if balance >= 80:
-                tope_alcanzado = True
-            sumado = balance - antes
-            efecto = (f"+{sumado}" if sumado == ganancia
-                      else f"+{sumado} (tope 80)")
-            estado = "✅ Aprobó"
-    else:
-        balance -= int(row["Creditos"])
-        efecto   = f"-{int(row['Creditos'])}"
-        estado   = "❌ Perdió"
-
-    historial.append({
-        "Asignatura": row["Asignatura"],
-        "Nota":       row["Nota"],
-        "Estado":     estado,
-        "Efecto":     efecto,
-        "Saldo":      int(balance)
+filas_periodo = []
+for p in periodos_ordenados:
+    v = papas_periodo[p]
+    etiqueta = f"🔵 {p}" if p != ultimo_periodo else f"⭐ {p} (último)"
+    filas_periodo.append({
+        "Periodo":   etiqueta,
+        "Créditos":  v["creditos"],
+        "P.A.P.A.":  v["papa"],
+        "Estado":    (
+            "🔴 Riesgo alto"    if v["papa"] < 2.7 else
+            "🟠 Riesgo moderado" if v["papa"] < 3.0 else
+            "🟡 Alerta"          if v["papa"] < 3.4 else
+            "🟢 Estable"
+        )
     })
 
-df_bolsa       = pd.DataFrame(historial)
-df_bolsa.index = [""] * len(df_bolsa)
-
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("🪙 Bolsa de Créditos Disponibles")
-st.caption(
-    "Acumula hasta 80 créditos aprobando asignaturas. "
-    "Una vez alcanzado ese tope, aprobar más materias ya no suma créditos. "
-    "Perder una materia siempre descuenta créditos."
-)
-st.warning(
-    "⚠️ **Este ítem no se calcula con precisión**, debido a que hay cancelaciones "
-    "y pérdidas de créditos que también descuentan y no están reflejadas aquí. "
-    "**Este ítem es solo informativo** para que tengas presente tu proceso. "
-    "A partir de esto, revisa el **SIA** para verificar cuáles son tus créditos disponibles."
-)
-
-col_b1, col_b2 = st.columns(2)
-with col_b1:
-    st.metric("Créditos disponibles", int(balance))
-with col_b2:
-    if tope_alcanzado:
-        st.metric("Estado del tope", "🔒 Tope de 80 alcanzado")
-    else:
-        st.metric("Tope máximo", 80)
-
-if tope_alcanzado:
-    st.info(
-        "🔒 Ya alcanzaste el tope de 80 créditos. "
-        "Aprobar más materias no incrementará tu bolsa, "
-        "pero perder materias sí la reducirá.")
-
-with st.expander("Ver detalle de movimientos de créditos"):
-    st.dataframe(df_bolsa, use_container_width=True)
+df_periodos        = pd.DataFrame(filas_periodo)
+df_periodos.index  = [""] * len(df_periodos)
+st.dataframe(df_periodos, use_container_width=True)
 
 st.markdown("---")
-
-if balance <= 0:
-    st.error(
-        f"🚨 **Riesgo de pérdida de calidad de estudiante.** "
-        f"Tu bolsa llegó a **{int(balance)} créditos**. "
-        "Sin créditos disponibles no podrás matricular. "
-        "Acércate urgentemente a **Dirección Académica**."
-    )
-elif balance <= 10:
-    st.error(
-        f"⚠️ **Créditos muy bajos ({int(balance)} restantes).** "
-        "Estás en riesgo de no poder continuar matriculando. "
-        "Acércate con urgencia a **Dirección Académica**."
-    )
-elif balance <= 20:
-    st.warning(
-        f"🟠 **Créditos en zona de alerta ({int(balance)} restantes).** "
-        "Consulta con **Dirección Académica** para planificar los próximos semestres."
-    )
-else:
-    st.success(
-        f"🟢 **Créditos en zona estable ({int(balance)} restantes).** "
-        "Puedes continuar con normalidad."
-    )
-
-st.markdown(
-    "📄 Para más información consulta el "
-    "[Acuerdo 008 de 2008 del CSU](PEGA_AQUÍ_EL_LINK)."
-)
+col_g1, col_g2 = st.columns(2)
+with col_g1:
+    st.metric("P.A.P.A. Global", papa_global,
+              help="Calculado sobre todas las asignaturas ingresadas")
+with col_g2:
+    st.metric("Total Créditos Acumulados", int(suma_cred_global))
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# ESTADO ACADÉMICO
+# DETALLE ÚLTIMO PERIODO
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📌 Estado Académico")
+st.subheader(f"📋 Detalle — Último Periodo: {ultimo_periodo}")
 
-if papa < 2.7:
+df_ult_vista = df_ultimo[["Asignatura","Creditos","Nota"]].copy()
+df_ult_vista.insert(3, "Estado", df_ult_vista["Nota"].apply(
+    lambda n: "✅ Aprobó" if n >= 3.0 else "❌ Perdió"))
+df_ult_vista = df_ult_vista.rename(columns={"Creditos": "Créditos"})
+df_ult_vista.index = [""] * len(df_ult_vista)
+st.dataframe(df_ult_vista, use_container_width=True)
+
+col_u1, col_u2 = st.columns(2)
+with col_u1:
+    st.metric(f"P.A.P.A. {ultimo_periodo}", papa_ultimo)
+with col_u2:
+    st.metric("Créditos matriculados", int(sc_ultimo))
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------------
+# CARGA HORARIA — ÚLTIMO PERIODO
+# -----------------------------------
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader(f"⏰ Carga Horaria — {ultimo_periodo}")
+st.caption("Calculada únicamente con las asignaturas del último periodo inscrito.")
+
+colA, colB, colC = st.columns(3)
+with colA:
+    st.metric("Horas presenciales / semana", total_pres)
+with colB:
+    st.metric("Horas autónomas / semana", total_auto)
+with colC:
+    st.metric("Total horas / semana", total_pres + total_auto)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------------
+# ESTADO ACADÉMICO — GLOBAL
+# -----------------------------------
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("📌 Estado Académico Global")
+st.caption("Basado en el P.A.P.A. acumulado de todos los periodos ingresados.")
+
+if papa_global < 2.7:
     st.error(
         "🔴 **Riesgo alto.** Puedes solicitar excepcionalidad ante el Consejo "
         "Superior Universitario. Acércate a Dirección Académica para orientaciones."
     )
-elif papa < 3.0:
+elif papa_global < 3.0:
     st.warning(
         "🟠 **Riesgo moderado.** Puedes solicitar reingreso ante el Consejo de "
         "Facultad. Acércate a Dirección Académica para revisar fechas y orientaciones."
     )
-elif papa < 3.4:
+elif papa_global < 3.4:
     st.info(
         "🔵 **Zona de alerta.** Acércate a Dirección Académica para trazar "
         "un plan que fortalezca las asignaturas con bajo rendimiento."
@@ -549,152 +464,114 @@ else:
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
-# SUGERENCIAS ACADÉMICAS
+# SUGERENCIAS — ÚLTIMO PERIODO
 # -----------------------------------
 sugerencias = []
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("💡 Sugerencias Académicas")
+st.subheader(f"💡 Sugerencias de Mejora — {ultimo_periodo}")
+st.caption("Las proyecciones se calculan únicamente con las asignaturas del último periodo inscrito.")
 
-if suma_creditos > 0:
+en_riesgo  = df_ultimo[df_ultimo["Nota"] < 3.0]
+en_alerta  = df_ultimo[(df_ultimo["Nota"] >= 3.0) & (df_ultimo["Nota"] < 3.5)]
+destacadas = df_ultimo[df_ultimo["Nota"] >= 4.0]
 
-    en_riesgo  = df[df["Nota"] < 3.0]
-    en_alerta  = df[(df["Nota"] >= 3.0) & (df["Nota"] < 3.5)]
-    destacadas = df[df["Nota"] >= 4.0]
+col_s1, col_s2, col_s3 = st.columns(3)
+with col_s1:
+    st.metric("En riesgo (< 3.0)", len(en_riesgo),
+              delta=f"-{len(en_riesgo)}" if len(en_riesgo) > 0 else None,
+              delta_color="inverse")
+with col_s2:
+    st.metric("En alerta (3.0 – 3.4)", len(en_alerta))
+with col_s3:
+    st.metric("Destacadas (≥ 4.0)", len(destacadas))
 
-    # Métricas rápidas
-    col_s1, col_s2, col_s3 = st.columns(3)
-    with col_s1:
-        st.metric(
-            "En riesgo (< 3.0)", len(en_riesgo),
-            delta=f"-{len(en_riesgo)} materias" if len(en_riesgo) > 0 else None,
-            delta_color="inverse"
-        )
-    with col_s2:
-        st.metric("En alerta (3.0 – 3.4)", len(en_alerta))
-    with col_s3:
-        st.metric("Destacadas (≥ 4.0)", len(destacadas))
+st.markdown("---")
 
-    st.markdown("---")
-
-    # Asignaturas perdidas
-    if not en_riesgo.empty:
-        st.error("#### 🔴 Asignaturas en riesgo de pérdida")
-        for _, row in en_riesgo.iterrows():
-            puntos_faltantes = round(3.0 - float(row["Nota"]), 1)
-            st.markdown(
-                f"- ❌ **{row['Asignatura']}** — nota actual: `{row['Nota']}` · "
-                f"Te faltan **{puntos_faltantes} puntos** para aprobar. "
-                f"Prioriza esta materia y busca apoyo en **Dirección Académica**."
-            )
-        st.markdown("")
-
-    # Asignaturas en alerta
-    if not en_alerta.empty:
-        st.warning("#### 🟠 Asignaturas en zona de alerta")
-        for _, row in en_alerta.iterrows():
-            puntos_mejora = round(3.5 - float(row["Nota"]), 1)
-            st.markdown(
-                f"- ⚠️ **{row['Asignatura']}** — nota actual: `{row['Nota']}` · "
-                f"Con **{puntos_mejora} puntos más** llegarías a 3.5 "
-                f"y mejorarías tu P.A.P.A. notablemente."
-            )
-        st.markdown("")
-
-    # Proyecciones de mejora
-    st.info("#### 📈 Proyecciones de mejora del P.A.P.A.")
-    encontro_proyeccion = False
-
-    for _, row in df.iterrows():
-        nota_actual = float(row["Nota"])
-        if nota_actual < 4.5:
-            for meta_nota in [3.0, 3.5, 4.0, 4.5]:
-                if meta_nota > nota_actual:
-                    nueva_sp   = (suma_ponderada
-                                  - (nota_actual * row["Creditos"])
-                                  + (meta_nota   * row["Creditos"]))
-                    nuevo_papa = nueva_sp / suma_creditos
-                    if nuevo_papa >= 3.0:
-                        diferencia = round(nuevo_papa - papa, 2)
-                        signo      = "+" if diferencia >= 0 else ""
-                        impacto    = (
-                            "impacto alto 🚀" if abs(diferencia) >= 0.3 else
-                            "impacto medio 📊" if abs(diferencia) >= 0.1 else
-                            "impacto leve 📌"
-                        )
-                        sugerencias.append(
-                            f"Si subes **{row['Asignatura']}** de {nota_actual} "
-                            f"a **{meta_nota}** → P.A.P.A. aprox. **{round(nuevo_papa, 2)}** "
-                            f"({signo}{diferencia} puntos · {impacto})"
-                        )
-                        encontro_proyeccion = True
-                        break
-
-    if encontro_proyeccion:
-        for s in sugerencias:
-            st.markdown(f"- {s}")
-        st.markdown("")
+if not en_riesgo.empty:
+    st.error("#### 🔴 Asignaturas en riesgo")
+    for _, row in en_riesgo.iterrows():
+        faltantes = round(3.0 - float(row["Nota"]), 1)
         st.markdown(
-            "> 📌 **Si no obtienes los resultados esperados con estas proyecciones, "
-            "busca ayuda en Dirección Académica para generar una estrategia "
-            "personalizada según tu situación académica.**"
-        )
-    else:
-        st.success(
-            "✅ Tu P.A.P.A. ya está en una zona sólida. "
-            "No se encontraron ajustes críticos necesarios."
+            f"- ❌ **{row['Asignatura']}** — nota: `{row['Nota']}` · "
+            f"Te faltan **{faltantes} puntos** para aprobar."
         )
 
-    st.markdown("---")
-
-    # Plan de acción según nivel del PAPA
-    st.markdown("#### 🗺️ Plan de Acción Sugerido")
-
-    if papa < 2.7:
-        st.error(
-            "**Situación crítica.** Tu P.A.P.A. está por debajo del mínimo institucional. "
-            "Es urgente que te acerques a **Dirección Académica** para:\n"
-            "- Conocer el proceso de solicitud de excepcionalidad.\n"
-            "- Identificar las asignaturas prioritarias a recuperar.\n"
-            "- Construir un plan semestre a semestre para estabilizar tu promedio."
-        )
-    elif papa < 3.0:
-        st.warning(
-            "**Situación de riesgo.** Estás cerca del límite. En **Dirección Académica** puedes:\n"
-            "- Solicitar orientación para el proceso de reingreso si aplica.\n"
-            "- Diseñar un plan de mejora enfocado en las materias con mayor peso en créditos.\n"
-            "- Explorar estrategias de estudio y gestión del tiempo."
-        )
-    elif papa < 3.4:
-        st.info(
-            "**Zona de alerta.** Estás aprobando, pero hay margen importante de mejora. "
-            "En **Dirección Académica** puedes:\n"
-            "- Trazar un plan para subir el P.A.P.A. al menos a 3.5.\n"
-            "- Identificar las asignaturas donde un pequeño esfuerzo genera mayor impacto.\n"
-            "- Acceder a tutorías o acompañamiento académico."
-        )
-    else:
-        st.success(
-            "**Vas bien.** Tu P.A.P.A. está en zona estable. Para mantenerlo y mejorarlo:\n"
-            "- Prioriza las asignaturas en alerta antes de que afecten el promedio.\n"
-            "- Consulta en **Dirección Académica** estrategias para alcanzar y mantener "
-            "un P.A.P.A. de 4.0 o más.\n"
-            "- Considera opciones como monitorias o semilleros de investigación."
+if not en_alerta.empty:
+    st.warning("#### 🟠 Asignaturas en alerta")
+    for _, row in en_alerta.iterrows():
+        mejora = round(3.5 - float(row["Nota"]), 1)
+        st.markdown(
+            f"- ⚠️ **{row['Asignatura']}** — nota: `{row['Nota']}` · "
+            f"Con **{mejora} puntos más** llegarías a 3.5."
         )
 
-st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("---")
+st.info("#### 📈 Proyecciones de mejora del P.A.P.A.")
 
-# -----------------------------------
-# CARGA HORARIA
-# -----------------------------------
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("⏰ Carga Horaria Total del Semestre")
+for _, row in df_ultimo.iterrows():
+    nota_actual = float(row["Nota"])
+    if nota_actual < 4.5:
+        for meta in [3.0, 3.5, 4.0, 4.5]:
+            if meta > nota_actual:
+                nueva_sp   = sp_ultimo - (nota_actual * row["Creditos"]) + (meta * row["Creditos"])
+                nuevo_papa = nueva_sp / sc_ultimo if sc_ultimo > 0 else 0
+                if nuevo_papa >= 3.0:
+                    diff   = round(nuevo_papa - papa_ultimo, 3)
+                    signo  = "+" if diff >= 0 else ""
+                    nivel  = ("impacto alto 🚀"   if abs(diff) >= 0.3 else
+                              "impacto medio 📊"  if abs(diff) >= 0.1 else
+                              "impacto leve 📌")
+                    sugerencias.append(
+                        f"Si subes **{row['Asignatura']}** de {nota_actual} a **{meta}** "
+                        f"→ P.A.P.A. del periodo aprox. **{round(nuevo_papa,3)}** "
+                        f"({signo}{diff} pts · {nivel})"
+                    )
+                    break
 
-colA, colB = st.columns(2)
-with colA:
-    st.metric("Horas Presenciales por semana", total_presenciales)
-with colB:
-    st.metric("Horas Autónomas por semana", total_autonomas)
+if sugerencias:
+    for s in sugerencias:
+        st.markdown(f"- {s}")
+    st.markdown("")
+    st.markdown(
+        "> 📌 **Si no obtienes los resultados esperados con estas proyecciones, "
+        "busca ayuda en Dirección Académica para generar una estrategia "
+        "personalizada según tu situación académica.**"
+    )
+else:
+    st.success("✅ El P.A.P.A. del último periodo está en zona sólida.")
+
+st.markdown("---")
+st.markdown("#### 🗺️ Plan de Acción")
+
+if papa_ultimo < 2.7:
+    st.error(
+        "**Situación crítica en el último periodo.** Acércate a **Dirección Académica** para:\n"
+        "- Conocer el proceso de solicitud de excepcionalidad.\n"
+        "- Identificar las asignaturas prioritarias a recuperar.\n"
+        "- Construir un plan semestre a semestre."
+    )
+elif papa_ultimo < 3.0:
+    st.warning(
+        "**Situación de riesgo en el último periodo.** En **Dirección Académica** puedes:\n"
+        "- Orientarte sobre el proceso de reingreso si aplica.\n"
+        "- Diseñar un plan de mejora enfocado en las materias con mayor peso.\n"
+        "- Explorar estrategias de estudio y gestión del tiempo."
+    )
+elif papa_ultimo < 3.4:
+    st.info(
+        "**Zona de alerta en el último periodo.** En **Dirección Académica** puedes:\n"
+        "- Trazar un plan para subir el P.A.P.A. al menos a 3.5.\n"
+        "- Identificar asignaturas donde un pequeño esfuerzo genera mayor impacto.\n"
+        "- Acceder a tutorías o acompañamiento académico."
+    )
+else:
+    st.success(
+        "**Último periodo en zona estable.** Para mantenerlo:\n"
+        "- Prioriza las asignaturas en alerta antes de que afecten el promedio.\n"
+        "- Consulta en **Dirección Académica** estrategias para alcanzar un P.A.P.A. de 4.0 o más.\n"
+        "- Considera opciones como monitorias o semilleros de investigación."
+    )
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -703,12 +580,11 @@ st.markdown("</div>", unsafe_allow_html=True)
 # -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📄 Exportar Reporte")
-st.caption("Descarga un reporte completo en PDF con todos tus resultados.")
+st.caption("Reporte completo con P.A.P.A. por periodo, estado académico y sugerencias.")
 
 pdf_buffer = generar_pdf(
-    df, papa,
-    total_presenciales, total_autonomas,
-    sugerencias, balance, tope_alcanzado
+    df, papa_global, papas_periodo, ultimo_periodo,
+    df_ultimo, sugerencias, total_pres, total_auto
 )
 st.download_button(
     label="⬇️  Descargar Reporte PDF",
@@ -716,7 +592,6 @@ st.download_button(
     file_name=f"reporte_academico_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
     mime="application/pdf"
 )
-
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------------
@@ -724,24 +599,24 @@ st.markdown("</div>", unsafe_allow_html=True)
 # -----------------------------------
 with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     st.markdown("""
-    **Cálculo del P.A.P.A.:**
-    Se multiplica la nota de cada asignatura por sus créditos, se suman esos
-    productos y se dividen entre el total de créditos matriculados.
+    **P.A.P.A. por periodo:**
+    Se calcula con las asignaturas de cada periodo ingresado.
+    Nota × Créditos sumado y dividido entre los créditos del periodo.
 
-    **Bolsa de créditos:**
-    - Si **apruebas** (nota ≥ 3.0) → suma `créditos × 2`, con tope de 80.
-    - Si **pierdes** (nota < 3.0) → descuenta `créditos`.
-    - Una vez alcanzado el tope de 80, aprobar materias ya **no suma más créditos**,
-      aunque el saldo baje después por materias perdidas.
-    - Este cálculo es orientativo. Verifica siempre en el **SIA**.
+    **P.A.P.A. Global:**
+    Se calcula sobre todas las asignaturas de todos los periodos ingresados.
 
-    **Horas presenciales:** 1 hora semanal por cada crédito.
+    **Sugerencias y horas:**
+    Se calculan únicamente con el último periodo ingresado
+    (el de mayor valor alfanumérico entre los periodos registrados).
 
-    **Horas autónomas:** 2 horas semanales adicionales por cada crédito.
+    **Estado académico:**
+    Se evalúa siempre sobre el P.A.P.A. global.
 
-    **Ejemplo:** 4 créditos = 4 h presenciales + 8 h autónomas = 12 h/semana.
+    **Horas presenciales:** 1 hora semanal por crédito.
+    **Horas autónomas:** 2 horas semanales por crédito.
 
-    > Si tienes dificultades, acude a **Acompañamiento Académico**.
+    > Para orientación personalizada acude a **Acompañamiento Académico**.
     """)
 
 # -----------------------------------
@@ -759,7 +634,6 @@ st.markdown("""
     gap: 6px;
     background: black;
     padding: 10px 0;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
     z-index: 999;
     font-size: 14px;
     color: white;
