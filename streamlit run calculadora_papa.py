@@ -77,6 +77,24 @@ st.markdown("""
     }
 
     footer { visibility: hidden; }
+
+    /* Texto visible dentro de las tarjetas */
+    .stNumberInput label,
+    .stTextInput label,
+    .stRadio label,
+    .stSelectbox label {
+        color: #2d3748 !important;
+        font-weight: 500 !important;
+    }
+
+    div[data-testid="stMarkdownContainer"] p {
+        color: #2d3748;
+    }
+
+    .stNumberInput input,
+    .stTextInput input {
+        color: #1a2e5a !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -102,31 +120,31 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         base.update(kw)
         return ParagraphStyle(name, **base)
 
-    et = ep('t',  fontSize=20, textColor=azul, alignment=TA_CENTER,
-            spaceAfter=4, fontName='Helvetica-Bold')
-    es = ep('s',  fontSize=11, textColor=colors.HexColor("#5a6a7e"),
-            alignment=TA_CENTER, spaceAfter=16)
-    ec = ep('c',  fontSize=13, textColor=azul, spaceBefore=14,
-            spaceAfter=6, fontName='Helvetica-Bold')
-    en = ep('n')
-    ef = ep('f',  fontSize=8, textColor=colors.HexColor("#94a3b8"),
-            alignment=TA_CENTER)
-    ea = ep('a',  fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
-    eok= ep('ok', fontSize=10, textColor=verde, fontName='Helvetica-Bold')
+    et  = ep('t',  fontSize=20, textColor=azul, alignment=TA_CENTER,
+             spaceAfter=4, fontName='Helvetica-Bold')
+    es  = ep('s',  fontSize=11, textColor=colors.HexColor("#5a6a7e"),
+             alignment=TA_CENTER, spaceAfter=16)
+    ec  = ep('c',  fontSize=13, textColor=azul, spaceBefore=14,
+             spaceAfter=6, fontName='Helvetica-Bold')
+    en  = ep('n')
+    ef  = ep('f',  fontSize=8, textColor=colors.HexColor("#94a3b8"),
+             alignment=TA_CENTER)
+    ea  = ep('a',  fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
+    eok = ep('ok', fontSize=10, textColor=verde, fontName='Helvetica-Bold')
 
     def tbl(data, widths):
         t = Table(data, colWidths=widths)
         t.setStyle(TableStyle([
-            ('BACKGROUND',     (0,0),(-1,0), azul),
-            ('TEXTCOLOR',      (0,0),(-1,0), colors.white),
-            ('FONTNAME',       (0,0),(-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE',       (0,0),(-1,-1), 9),
-            ('ALIGN',          (0,0),(-1,-1), 'CENTER'),
-            ('VALIGN',         (0,0),(-1,-1), 'MIDDLE'),
-            ('ROWBACKGROUNDS', (0,1),(-1,-1), [gris, colors.white]),
-            ('GRID',           (0,0),(-1,-1), 0.5, borde),
-            ('TOPPADDING',     (0,0),(-1,-1), 7),
-            ('BOTTOMPADDING',  (0,0),(-1,-1), 7),
+            ('BACKGROUND',     (0,0), (-1,0), azul),
+            ('TEXTCOLOR',      (0,0), (-1,0), colors.white),
+            ('FONTNAME',       (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE',       (0,0), (-1,-1), 9),
+            ('ALIGN',          (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN',         (0,0), (-1,-1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [gris, colors.white]),
+            ('GRID',           (0,0), (-1,-1), 0.5, borde),
+            ('TOPPADDING',     (0,0), (-1,-1), 7),
+            ('BOTTOMPADDING',  (0,0), (-1,-1), 7),
         ]))
         return t
 
@@ -147,7 +165,7 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
     rows.append(["GLOBAL", str(int(df["Creditos"].sum())), str(papa_global)])
     story += [tbl(rows, [3*inch, 1.5*inch, 1.5*inch]), Spacer(1, 14)]
 
-    # Asignaturas ultimo periodo
+    # Asignaturas último periodo
     story.append(Paragraph(f"Asignaturas - Ultimo Periodo ({ultimo_periodo})", ec))
     enc = ["Asignatura", "Cred.", "Nota", "Estado"]
     filas = [enc]
@@ -160,7 +178,7 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         ])
     story += [tbl(filas, [3.0*inch, 0.8*inch, 0.8*inch, 1.0*inch]), Spacer(1, 14)]
 
-    # Carga horaria ultimo periodo
+    # Carga horaria
     story.append(Paragraph(f"Carga Horaria - Ultimo Periodo ({ultimo_periodo})", ec))
     ch = [["Horas Presenciales / semana", "Horas Autonomas / semana"],
           [str(int(total_pres)), str(int(total_auto))]]
@@ -177,7 +195,7 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
             "Direccion Academica para generar una estrategia personalizada.", en))
         story.append(Spacer(1, 10))
 
-    # Estado academico
+    # Estado académico
     story.append(Paragraph("Estado Academico (P.A.P.A. Global)", ec))
     if papa_global < 2.7:
         story += [Paragraph("Estado: RIESGO ALTO", ea),
@@ -197,7 +215,9 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         Spacer(1, 16),
         HRFlowable(width="100%", thickness=1, color=borde),
         Spacer(1, 6),
-        Paragraph("Documento generado por la Calculadora Academica - Direccion Academica", ef)
+        Paragraph(
+            "Documento generado por la Calculadora Academica - Direccion Academica",
+            ef)
     ]
 
     doc.build(story)
@@ -216,7 +236,7 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Ingreso de Asignaturas")
 
 num = st.number_input("¿Cuántas asignaturas deseas ingresar?",
-                      min_value=1, max_value=100, step=1, value=6)
+                      min_value=1, max_value=60, step=1, value=5)
 
 for i in range(int(num)):
     st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>",
@@ -253,11 +273,12 @@ for i in range(int(num)):
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-if not datos:
+datos_validos = [d for d in datos if d["Creditos"] > 0]
+if not datos_validos:
     st.info("Ingresa al menos una asignatura para ver los resultados.")
     st.stop()
 
-df = pd.DataFrame(datos)
+df = pd.DataFrame(datos_validos)
 
 # PAPA global
 suma_pond_global = (df["Creditos"] * df["Nota"]).sum()
@@ -268,21 +289,23 @@ papa_global      = round(suma_pond_global / suma_cred_global, 3) if suma_cred_gl
 periodos_ordenados = sorted(df["Periodo"].unique())
 ultimo_periodo     = periodos_ordenados[-1]
 
+papas_periodo = {}
 for p in periodos_ordenados:
-    sub  = df[df["Periodo"] == p]
-    sp   = (sub["Creditos"] * sub["Nota"]).sum()
-    sc   = sub["Creditos"].sum()
+    sub = df[df["Periodo"] == p]
+    sp  = (sub["Creditos"] * sub["Nota"]).sum()
+    sc  = sub["Creditos"].sum()
     papas_periodo[p] = {
         "papa":     round(sp / sc, 3) if sc > 0 else 0.0,
         "creditos": int(sc)
     }
 
-df_ultimo    = df[df["Periodo"] == ultimo_periodo].copy()
-sp_ultimo    = (df_ultimo["Creditos"] * df_ultimo["Nota"]).sum()
-sc_ultimo    = df_ultimo["Creditos"].sum()
-papa_ultimo  = round(sp_ultimo / sc_ultimo, 3) if sc_ultimo > 0 else 0.0
-total_pres   = int(df_ultimo["Horas Presenciales"].sum())
-total_auto   = int(df_ultimo["Horas Autonomas"].sum())
+# Último periodo
+df_ultimo   = df[df["Periodo"] == ultimo_periodo].copy()
+sp_ultimo   = (df_ultimo["Creditos"] * df_ultimo["Nota"]).sum()
+sc_ultimo   = df_ultimo["Creditos"].sum()
+papa_ultimo = round(sp_ultimo / sc_ultimo, 3) if sc_ultimo > 0 else 0.0
+total_pres  = int(df_ultimo["Horas Presenciales"].sum())
+total_auto  = int(df_ultimo["Horas Autonomas"].sum())
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📊 P.A.P.A. por Periodo")
@@ -290,21 +313,21 @@ st.subheader("📊 P.A.P.A. por Periodo")
 filas_periodo = []
 for p in periodos_ordenados:
     v = papas_periodo[p]
-    etiqueta = f"🔵 {p}" if p != ultimo_periodo else f"⭐ {p} (último)"
+    etiqueta = f"⭐ {p} (último)" if p == ultimo_periodo else f"🔵 {p}"
     filas_periodo.append({
-        "Periodo":   etiqueta,
-        "Créditos":  v["creditos"],
-        "P.A.P.A.":  v["papa"],
-        "Estado":    (
-            "🔴 Riesgo alto"    if v["papa"] < 2.7 else
+        "Periodo":  etiqueta,
+        "Créditos": v["creditos"],
+        "P.A.P.A.": v["papa"],
+        "Estado": (
+            "🔴 Riesgo alto"     if v["papa"] < 2.7 else
             "🟠 Riesgo moderado" if v["papa"] < 3.0 else
             "🟡 Alerta"          if v["papa"] < 3.4 else
             "🟢 Estable"
         )
     })
 
-df_periodos        = pd.DataFrame(filas_periodo)
-df_periodos.index  = [""] * len(df_periodos)
+df_periodos       = pd.DataFrame(filas_periodo)
+df_periodos.index = [""] * len(df_periodos)
 st.dataframe(df_periodos, use_container_width=True)
 
 st.markdown("---")
@@ -313,14 +336,14 @@ with col_g1:
     st.metric("P.A.P.A. Global", papa_global,
               help="Calculado sobre todas las asignaturas ingresadas")
 with col_g2:
-    st.metric("Total Créditos Acumulados", int(suma_cred_global))
+    st.metric("Créditos vistos durante los diferentes periodos", int(suma_cred_global))
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader(f"📋 Detalle — Último Periodo: {ultimo_periodo}")
 
-df_ult_vista = df_ultimo[["Asignatura","Creditos","Nota"]].copy()
+df_ult_vista = df_ultimo[["Asignatura", "Creditos", "Nota"]].copy()
 df_ult_vista.insert(3, "Estado", df_ult_vista["Nota"].apply(
     lambda n: "✅ Aprobó" if n >= 3.0 else "❌ Perdió"))
 df_ult_vista = df_ult_vista.rename(columns={"Creditos": "Créditos"})
@@ -331,7 +354,7 @@ col_u1, col_u2 = st.columns(2)
 with col_u1:
     st.metric(f"P.A.P.A. {ultimo_periodo}", papa_ultimo)
 with col_u2:
-    st.metric("Créditos vistos de los diferentes periodos", int(sc_ultimo))
+    st.metric("Créditos vistos en este periodo", int(sc_ultimo))
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -424,17 +447,19 @@ for _, row in df_ultimo.iterrows():
     if nota_actual < 4.5:
         for meta in [3.0, 3.5, 4.0, 4.5]:
             if meta > nota_actual:
-                nueva_sp   = sp_ultimo - (nota_actual * row["Creditos"]) + (meta * row["Creditos"])
+                nueva_sp   = (sp_ultimo
+                              - (nota_actual * row["Creditos"])
+                              + (meta        * row["Creditos"]))
                 nuevo_papa = nueva_sp / sc_ultimo if sc_ultimo > 0 else 0
                 if nuevo_papa >= 3.0:
-                    diff   = round(nuevo_papa - papa_ultimo, 3)
-                    signo  = "+" if diff >= 0 else ""
-                    nivel  = ("impacto alto 🚀"   if abs(diff) >= 0.3 else
-                              "impacto medio 📊"  if abs(diff) >= 0.1 else
-                              "impacto leve 📌")
+                    diff  = round(nuevo_papa - papa_ultimo, 3)
+                    signo = "+" if diff >= 0 else ""
+                    nivel = ("impacto alto 🚀"  if abs(diff) >= 0.3 else
+                             "impacto medio 📊" if abs(diff) >= 0.1 else
+                             "impacto leve 📌")
                     sugerencias.append(
                         f"Si subes **{row['Asignatura']}** de {nota_actual} a **{meta}** "
-                        f"→ P.A.P.A. del periodo aprox. **{round(nuevo_papa,3)}** "
+                        f"→ P.A.P.A. del periodo aprox. **{round(nuevo_papa, 3)}** "
                         f"({signo}{diff} pts · {nivel})"
                     )
                     break
@@ -499,21 +524,21 @@ st.download_button(
     file_name=f"reporte_academico_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
     mime="application/pdf"
 )
+
 st.markdown(
     "📄 Para más información sobre el cálculo del P.A.P.A. y créditos disponibles, "
-    "consulta el [Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983).",
-    unsafe_allow_html=False
+    "consulta el [Acuerdo 008 de 2008 del CSU](PEGA_AQUÍ_EL_LINK)."
 )
+
 st.markdown("</div>", unsafe_allow_html=True)
 
 with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     st.markdown("""
     **P.A.P.A. por periodo:**
-    Se calcula con las asignaturas de cada periodo ingresado.
-    Nota × Créditos sumado y dividido entre los créditos del periodo.
+    Σ(nota × créditos) / Σ(créditos) de cada periodo.
 
     **P.A.P.A. Global:**
-    Se calcula sobre todas las asignaturas de todos los periodos ingresados.
+    Σ(nota × créditos) / Σ(créditos) de todos los periodos ingresados.
 
     **Sugerencias y horas:**
     Se calculan únicamente con el último periodo ingresado
@@ -524,6 +549,8 @@ with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
 
     **Horas presenciales:** 1 hora semanal por crédito.
     **Horas autónomas:** 2 horas semanales por crédito.
+
+    **Ejemplo:** (3,8×4 + 4,2×3 + 3,5×4 + 4,5×2 + 3,2×3) / 16 = **3,775**
 
     > Para orientación personalizada acude a **Acompañamiento Académico**.
     """)
