@@ -556,7 +556,7 @@ st.download_button(
 
 st.markdown(
     "📄 Para más información sobre el cálculo del P.A.P.A. y créditos disponibles, "
-    "consulta el [Acuerdo 008 de 2008 del CSU](PEGA_AQUÍ_EL_LINK)."
+    "consulta el [Acuerdo 008 de 2008 del CSU](https://legal.unal.edu.co/rlunal/home/doc.jsp?d_i=34983)."
 )
 
 st.markdown("</div>", unsafe_allow_html=True)
