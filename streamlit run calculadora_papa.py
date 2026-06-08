@@ -11,9 +11,6 @@ from reportlab.platypus import (
 )
 from reportlab.lib.enums import TA_CENTER
 
-# -----------------------------------
-# CONFIGURACIÓN GENERAL
-# -----------------------------------
 st.set_page_config(
     page_title="Calculadora Académica",
     layout="wide",
@@ -83,10 +80,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-# -----------------------------------
-# PDF
-# -----------------------------------
 def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
                 df_ultimo, sugerencias, total_pres, total_auto):
 
@@ -211,20 +204,12 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
     buffer.seek(0)
     return buffer
 
-
-# =============================================
-# APP
-# =============================================
-
 st.markdown("<div class='titulo-principal'>🎓 Calculadora Académica</div>",
             unsafe_allow_html=True)
 st.markdown("<div class='subtitulo'>P.A.P.A. por periodo y global</div>",
             unsafe_allow_html=True)
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# INGRESO DE ASIGNATURAS
-# -----------------------------------
 datos = []
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -268,16 +253,10 @@ for i in range(int(num)):
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# GUARDIA
-# -----------------------------------
 if not datos:
     st.info("Ingresa al menos una asignatura para ver los resultados.")
     st.stop()
 
-# -----------------------------------
-# CÁLCULOS
-# -----------------------------------
 df = pd.DataFrame(datos)
 
 # PAPA global
@@ -289,7 +268,6 @@ papa_global      = round(suma_pond_global / suma_cred_global, 3) if suma_cred_gl
 periodos_ordenados = sorted(df["Periodo"].unique())
 ultimo_periodo     = periodos_ordenados[-1]
 
-papas_periodo = {}
 for p in periodos_ordenados:
     sub  = df[df["Periodo"] == p]
     sp   = (sub["Creditos"] * sub["Nota"]).sum()
@@ -299,7 +277,6 @@ for p in periodos_ordenados:
         "creditos": int(sc)
     }
 
-# Último periodo
 df_ultimo    = df[df["Periodo"] == ultimo_periodo].copy()
 sp_ultimo    = (df_ultimo["Creditos"] * df_ultimo["Nota"]).sum()
 sc_ultimo    = df_ultimo["Creditos"].sum()
@@ -307,9 +284,6 @@ papa_ultimo  = round(sp_ultimo / sc_ultimo, 3) if sc_ultimo > 0 else 0.0
 total_pres   = int(df_ultimo["Horas Presenciales"].sum())
 total_auto   = int(df_ultimo["Horas Autonomas"].sum())
 
-# -----------------------------------
-# RESUMEN POR PERIODO
-# -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📊 P.A.P.A. por Periodo")
 
@@ -343,9 +317,6 @@ with col_g2:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# DETALLE ÚLTIMO PERIODO
-# -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader(f"📋 Detalle — Último Periodo: {ultimo_periodo}")
 
@@ -360,13 +331,10 @@ col_u1, col_u2 = st.columns(2)
 with col_u1:
     st.metric(f"P.A.P.A. {ultimo_periodo}", papa_ultimo)
 with col_u2:
-    st.metric("Créditos matriculados", int(sc_ultimo))
+    st.metric("Créditos vistos de los diferentes periodos", int(sc_ultimo))
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# CARGA HORARIA — ÚLTIMO PERIODO
-# -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader(f"⏰ Carga Horaria — {ultimo_periodo}")
 st.caption("Calculada únicamente con las asignaturas del último periodo inscrito.")
@@ -381,9 +349,6 @@ with colC:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# ESTADO ACADÉMICO — GLOBAL
-# -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📌 Estado Académico Global")
 st.caption("Basado en el P.A.P.A. acumulado de todos los periodos ingresados.")
@@ -411,9 +376,6 @@ else:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# SUGERENCIAS — ÚLTIMO PERIODO
-# -----------------------------------
 sugerencias = []
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -523,9 +485,6 @@ else:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# EXPORTAR PDF
-# -----------------------------------
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📄 Exportar Reporte")
 st.caption("Reporte completo con P.A.P.A. por periodo, estado académico y sugerencias.")
@@ -547,9 +506,6 @@ st.markdown(
 )
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# EXPLICACIÓN
-# -----------------------------------
 with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     st.markdown("""
     **P.A.P.A. por periodo:**
@@ -572,9 +528,6 @@ with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     > Para orientación personalizada acude a **Acompañamiento Académico**.
     """)
 
-# -----------------------------------
-# FOOTER
-# -----------------------------------
 st.markdown("""
 <style>
 .footer-icons {
