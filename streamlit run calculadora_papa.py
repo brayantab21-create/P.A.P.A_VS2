@@ -78,7 +78,43 @@ st.markdown("""
 
     footer { visibility: hidden; }
 
-    /* Texto visible dentro de las tarjetas */
+    /* ── Textos globales sobre fondo oscuro ── */
+    h1, h2, h3, h4, h5, h6 {
+        color: #E6F2F7 !important;
+    }
+
+    /* Subtítulos de secciones (st.subheader fuera de tarjetas) */
+    div[data-testid="stMarkdownContainer"] h3 {
+        color: #E6F2F7 !important;
+    }
+
+    /* Captions y texto de apoyo fuera de tarjetas */
+    div[data-testid="stCaptionContainer"] p,
+    .stCaption p {
+        color: #aac4d4 !important;
+    }
+
+    /* Texto markdown general (links, párrafos fuera de tarjetas) */
+    .stMarkdown p, .stMarkdown li,
+    div[data-testid="stMarkdownContainer"] p,
+    div[data-testid="stMarkdownContainer"] li {
+        color: #d0e8f2 !important;
+    }
+
+    /* Expander label */
+    details summary p,
+    .streamlit-expanderHeader p {
+        color: #C5E1ED !important;
+    }
+
+    /* ── Textos dentro de tarjetas blancas: oscuros ── */
+    .card p, .card li, .card label,
+    .card div[data-testid="stMarkdownContainer"] p,
+    .card div[data-testid="stMarkdownContainer"] li {
+        color: #2d3748 !important;
+    }
+
+    /* Labels de inputs */
     .stNumberInput label,
     .stTextInput label,
     .stRadio label,
@@ -87,10 +123,7 @@ st.markdown("""
         font-weight: 500 !important;
     }
 
-    div[data-testid="stMarkdownContainer"] p {
-        color: #2d3748;
-    }
-
+    /* Valores dentro de inputs */
     .stNumberInput input,
     .stTextInput input {
         color: #1a2e5a !important;
