@@ -365,7 +365,7 @@ with col_g1:
     st.metric("P.A.P.A. Global", papa_global,
               help="Calculado sobre todas las asignaturas ingresadas")
 with col_g2:
-    st.metric("Créditos vistos durante los diferentes periodos", int(suma_cred_global))
+    st.metric("Créditos vistos durante el último periodo introducido", int(suma_cred_global))
 
 st.markdown("</div>", unsafe_allow_html=True)
 
