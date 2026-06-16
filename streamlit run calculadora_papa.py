@@ -364,11 +364,8 @@ df_periodos.index = [""] * len(df_periodos)
 st.dataframe(df_periodos, use_container_width=True)
 
 st.markdown("---")
-col_g1, col_g2 = st.columns(2)
-with col_g1:
-    st.metric("P.A.P.A. Global", papa_global,
-              help="Calculado sobre todas las asignaturas ingresadas")
-with col_g2:
+st.metric("P.A.P.A. Global", papa_global,
+          help="Calculado sobre todas las asignaturas ingresadas")
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -537,7 +534,7 @@ else:
         "**Último periodo en zona estable.** Para mantenerlo:\n"
         "- Prioriza las asignaturas en alerta antes de que afecten el promedio.\n"
         "- Consulta en **Dirección Académica** estrategias para alcanzar un P.A.P.A. de 4.0 o más.\n"
-        "- Considera opciones de estudio autonomo."
+        "- Considera opciones como monitorias o semilleros de investigación."
     )
 
 st.markdown("</div>", unsafe_allow_html=True)
@@ -564,6 +561,9 @@ st.markdown(
 
 st.markdown("</div>", unsafe_allow_html=True)
 
+# -----------------------------------
+# EXPLICACIÓN
+# -----------------------------------
 with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     st.markdown("""
     **P.A.P.A. por periodo:**
