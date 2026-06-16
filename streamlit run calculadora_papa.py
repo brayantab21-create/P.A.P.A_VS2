@@ -190,6 +190,7 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         Spacer(1, 10),
     ]
 
+    # PAPA por periodo
     story.append(Paragraph("P.A.P.A. por Periodo", ec))
     rows = [["Periodo", "Creditos", "P.A.P.A."]]
     for p, vals in sorted(papas_periodo.items()):
@@ -197,6 +198,7 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
     rows.append(["GLOBAL", str(int(df["Creditos"].sum())), str(papa_global)])
     story += [tbl(rows, [3*inch, 1.5*inch, 1.5*inch]), Spacer(1, 14)]
 
+    # Asignaturas último periodo
     story.append(Paragraph(f"Asignaturas - Ultimo Periodo ({ultimo_periodo})", ec))
     enc = ["Asignatura", "Cred.", "Nota", "Estado"]
     filas = [enc]
@@ -209,11 +211,13 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         ])
     story += [tbl(filas, [3.0*inch, 0.8*inch, 0.8*inch, 1.0*inch]), Spacer(1, 14)]
 
+    # Carga horaria
     story.append(Paragraph(f"Carga Horaria - Ultimo Periodo ({ultimo_periodo})", ec))
     ch = [["Horas Presenciales / semana", "Horas Autonomas / semana"],
           [str(int(total_pres)), str(int(total_auto))]]
     story += [tbl(ch, [3.25*inch, 3.25*inch]), Spacer(1, 14)]
 
+    # Sugerencias
     if sugerencias:
         story.append(Paragraph("Proyecciones de Mejora (Ultimo Periodo)", ec))
         for s in sugerencias:
@@ -265,7 +269,7 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Ingreso de Asignaturas")
 
 num = st.number_input("¿Cuántas asignaturas deseas ingresar?",
-                      min_value=1, max_value=200, step=1, value=5)
+                      min_value=1, max_value=60, step=1, value=5)
 
 for i in range(int(num)):
     st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>",
@@ -365,7 +369,6 @@ with col_g1:
     st.metric("P.A.P.A. Global", papa_global,
               help="Calculado sobre todas las asignaturas ingresadas")
 with col_g2:
-    st.metric("Créditos matriculados durante los diferentes periodos", int(suma_cred_global))
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -534,7 +537,7 @@ else:
         "**Último periodo en zona estable.** Para mantenerlo:\n"
         "- Prioriza las asignaturas en alerta antes de que afecten el promedio.\n"
         "- Consulta en **Dirección Académica** estrategias para alcanzar un P.A.P.A. de 4.0 o más.\n"
-        "- Considera opciones como monitorias o semilleros de investigación."
+        "- Considera opciones de estudio autonomo."
     )
 
 st.markdown("</div>", unsafe_allow_html=True)
