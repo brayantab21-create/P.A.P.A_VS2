@@ -11,6 +11,7 @@ from reportlab.platypus import (
 )
 from reportlab.lib.enums import TA_CENTER
 
+
 st.set_page_config(
     page_title="Calculadora Académica",
     layout="wide",
@@ -269,7 +270,7 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 st.subheader("📚 Ingreso de Asignaturas")
 
 num = st.number_input("¿Cuántas asignaturas deseas ingresar?",
-                      min_value=1, max_value=600, step=1, value=5)
+                      min_value=1, max_value=60, step=1, value=5)
 
 for i in range(int(num)):
     st.markdown(f"<span class='asignatura-header'>Asignatura {i+1}</span>",
@@ -379,11 +380,7 @@ df_ult_vista = df_ult_vista.rename(columns={"Creditos": "Créditos"})
 df_ult_vista.index = [""] * len(df_ult_vista)
 st.dataframe(df_ult_vista, use_container_width=True)
 
-col_u1, col_u2 = st.columns(2)
-with col_u1:
-    st.metric(f"P.A.P.A. {ultimo_periodo}", papa_ultimo)
-with col_u2:
-    st.metric("Créditos vistos en este periodo", int(sc_ultimo))
+st.metric(f"P.A.P.A. {ultimo_periodo}", papa_ultimo)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -561,9 +558,6 @@ st.markdown(
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------
-# EXPLICACIÓN
-# -----------------------------------
 with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
     st.markdown("""
     **P.A.P.A. por periodo:**
