@@ -191,6 +191,17 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         Spacer(1, 10),
     ]
 
+    st.markdown("## 👤 Datos del Estudiante")
+    col_n, col_c, col_e = st.columns(3)
+    with col_n:
+        estudiante_nombre = st.text_input("Nombre completo", placeholder="Ej. María García López")
+    with col_c:
+        estudiante_cedula = st.text_input("Cédula / Código estudiantil", placeholder="Ej. 1234567890")
+    with col_e:
+        estudiante_correo = st.text_input("Correo institucional", placeholder="Ej. mgarcia@unal.edu.co")
+
+    st.markdown("<div class='yellow-divider'></div>", unsafe_allow_html=True)
+
     # PAPA por periodo
     story.append(Paragraph("P.A.P.A. por Periodo", ec))
     rows = [["Periodo", "Creditos", "P.A.P.A."]]
