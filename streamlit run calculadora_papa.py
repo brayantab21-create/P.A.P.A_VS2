@@ -84,25 +84,21 @@ st.markdown("""
         color: #E6F2F7 !important;
     }
 
-    /* Subtítulos de secciones (st.subheader fuera de tarjetas) */
     div[data-testid="stMarkdownContainer"] h3 {
         color: #E6F2F7 !important;
     }
 
-    /* Captions y texto de apoyo fuera de tarjetas */
     div[data-testid="stCaptionContainer"] p,
     .stCaption p {
         color: #aac4d4 !important;
     }
 
-    /* Texto markdown general (links, párrafos fuera de tarjetas) */
     .stMarkdown p, .stMarkdown li,
     div[data-testid="stMarkdownContainer"] p,
     div[data-testid="stMarkdownContainer"] li {
         color: #d0e8f2 !important;
     }
 
-    /* Expander label */
     details summary p,
     .streamlit-expanderHeader p {
         color: #C5E1ED !important;
@@ -115,7 +111,6 @@ st.markdown("""
         color: #2d3748 !important;
     }
 
-    /* Labels de inputs */
     .stNumberInput label,
     .stTextInput label,
     .stRadio label,
@@ -124,7 +119,6 @@ st.markdown("""
         font-weight: 500 !important;
     }
 
-    /* Valores dentro de inputs */
     .stNumberInput input,
     .stTextInput input {
         color: #1a2e5a !important;
@@ -132,19 +126,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# -----------------------------------
+# DATOS DEL ESTUDIANTE
+# -----------------------------------
 st.markdown("## 👤 Datos del Estudiante")
-col_n, col_c, col_e = st.columns(3)
+col_n, col_c, col_e, col_t = st.columns(4)
 with col_n:
-    estudiante_nombre = st.text_input("Nombre completo", placeholder="Ej. María García López")
+    estudiante_nombre = st.text_input("Nombre completo",
+                                      placeholder="Ej. María García López")
 with col_c:
-    estudiante_cedula = st.text_input("Cédula / Código estudiantil", placeholder="Ej. 1234567890")
+    estudiante_cedula = st.text_input("Cédula / Código estudiantil",
+                                      placeholder="Ej. 1234567890")
 with col_e:
-    estudiante_correo = st.text_input("Correo institucional", placeholder="Ej. mgarcia@unal.edu.co")
-    
-st.markdown("<div class='yellow-divider'></div>", unsafe_allow_html=True)
+    estudiante_correo = st.text_input("Correo institucional",
+                                      placeholder="Ej. mgarcia@unal.edu.co")
+with col_t:
+    estudiante_telefono = st.text_input("Teléfono",
+                                        placeholder="Ej. 3001234567")
 
+st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+
+
+# -----------------------------------
+# FUNCIÓN PARA GENERAR PDF
+# -----------------------------------
 def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
-                df_ultimo, sugerencias, total_pres, total_auto):
+                df_ultimo, sugerencias, total_pres, total_auto,
+                nombre, cedula, correo, telefono):
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter,
@@ -152,12 +160,14 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
                             topMargin=0.75*inch, bottomMargin=0.75*inch)
     story = []
 
-    azul  = colors.HexColor("#1a2e5a")
-    medio = colors.HexColor("#4f8ef7")
-    gris  = colors.HexColor("#f0f4f8")
-    borde = colors.HexColor("#e2e8f0")
-    rojo  = colors.HexColor("#e74c3c")
-    verde = colors.HexColor("#27ae60")
+    azul     = colors.HexColor("#1a2e5a")
+    medio    = colors.HexColor("#4f8ef7")
+    gris     = colors.HexColor("#f0f4f8")
+    borde    = colors.HexColor("#e2e8f0")
+    rojo     = colors.HexColor("#e74c3c")
+    verde    = colors.HexColor("#27ae60")
+    naranja  = colors.HexColor("#f39c12")
+    amarillo = colors.HexColor("#b8860b")
 
     def ep(name, **kw):
         base = dict(fontSize=10, textColor=colors.HexColor("#2d3748"),
@@ -167,15 +177,20 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
 
     et  = ep('t',  fontSize=20, textColor=azul, alignment=TA_CENTER,
              spaceAfter=4, fontName='Helvetica-Bold')
-    es  = ep('s',  fontSize=11, textColor=colors.HexColor("#5a6a7e"),
-             alignment=TA_CENTER, spaceAfter=16)
     ec  = ep('c',  fontSize=13, textColor=azul, spaceBefore=14,
              spaceAfter=6, fontName='Helvetica-Bold')
     en  = ep('n')
     ef  = ep('f',  fontSize=8, textColor=colors.HexColor("#94a3b8"),
              alignment=TA_CENTER)
-    ea  = ep('a',  fontSize=10, textColor=rojo,  fontName='Helvetica-Bold')
-    eok = ep('ok', fontSize=10, textColor=verde, fontName='Helvetica-Bold')
+    ea  = ep('a',  fontSize=12, textColor=rojo, fontName='Helvetica-Bold',
+             alignment=TA_CENTER)
+    eo  = ep('o',  fontSize=12, textColor=naranja, fontName='Helvetica-Bold',
+             alignment=TA_CENTER)
+    ey  = ep('y',  fontSize=12, textColor=amarillo, fontName='Helvetica-Bold',
+             alignment=TA_CENTER)
+    eok = ep('ok', fontSize=12, textColor=verde, fontName='Helvetica-Bold',
+             alignment=TA_CENTER)
+    ecen = ep('cen', alignment=TA_CENTER)
 
     def tbl(data, widths):
         t = Table(data, colWidths=widths)
@@ -193,16 +208,60 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         ]))
         return t
 
+    # ── Título ──
     story += [
-        Paragraph("Calculadora Academica", et),
-        Paragraph("Reporte de P.A.P.A. por Periodo y Global", es),
+        Paragraph("Calculadora de P.A.P.A.", et),
         HRFlowable(width="100%", thickness=2, color=medio),
-        Spacer(1, 12),
-        Paragraph(f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}", en),
         Spacer(1, 10),
     ]
 
-    # PAPA por periodo
+    # ── Estado de alerta debajo del título ──
+    if papa_global < 2.7:
+        story.append(Paragraph("ESTADO: RIESGO ALTO", ea))
+        story.append(Paragraph(
+            "Puedes solicitar excepcionalidad ante el Consejo Superior "
+            "Universitario. Acude a Direccion Academica para orientaciones.", ecen))
+    elif papa_global < 3.0:
+        story.append(Paragraph("ESTADO: RIESGO MODERADO", eo))
+        story.append(Paragraph(
+            "Puedes solicitar reingreso ante el Consejo de Facultad. "
+            "Acude a Direccion Academica.", ecen))
+    elif papa_global < 3.4:
+        story.append(Paragraph("ESTADO: ZONA DE ALERTA", ey))
+        story.append(Paragraph(
+            "Visita Direccion Academica para trazar un plan de mejora.", ecen))
+    else:
+        story.append(Paragraph("ESTADO: ZONA ESTABLE", eok))
+        story.append(Paragraph(
+            "Puedes asistir a Direccion Academica para fortalecer tus procesos.", ecen))
+
+    story.append(Spacer(1, 12))
+
+    # ── Datos del estudiante ──
+    story.append(Paragraph("Datos del Estudiante", ec))
+    datos_est = [
+        ["Nombre",              nombre.strip()   if nombre.strip()   else "—"],
+        ["Cedula / Codigo",     cedula.strip()   if cedula.strip()   else "—"],
+        ["Correo",              correo.strip()   if correo.strip()   else "—"],
+        ["Telefono",            telefono.strip() if telefono.strip() else "—"],
+        ["Fecha de generacion", datetime.now().strftime('%d/%m/%Y %H:%M')],
+    ]
+    t_est = Table(datos_est, colWidths=[2.2*inch, 4.3*inch])
+    t_est.setStyle(TableStyle([
+        ('FONTNAME',      (0,0), (0,-1), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0,0), (-1,-1), 9),
+        ('TEXTCOLOR',     (0,0), (-1,-1), colors.HexColor("#2d3748")),
+        ('ALIGN',         (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
+        ('ROWBACKGROUNDS',(0,0), (-1,-1), [gris, colors.white]),
+        ('GRID',          (0,0), (-1,-1), 0.5, borde),
+        ('TOPPADDING',    (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('LEFTPADDING',   (0,0), (-1,-1), 8),
+    ]))
+    story += [t_est, Spacer(1, 14)]
+
+    # ── PAPA por periodo ──
     story.append(Paragraph("P.A.P.A. por Periodo", ec))
     rows = [["Periodo", "Creditos", "P.A.P.A."]]
     for p, vals in sorted(papas_periodo.items()):
@@ -210,7 +269,7 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
     rows.append(["GLOBAL", str(int(df["Creditos"].sum())), str(papa_global)])
     story += [tbl(rows, [3*inch, 1.5*inch, 1.5*inch]), Spacer(1, 14)]
 
-    # Asignaturas último periodo
+    # ── Asignaturas último periodo ──
     story.append(Paragraph(f"Asignaturas - Ultimo Periodo ({ultimo_periodo})", ec))
     enc = ["Asignatura", "Cred.", "Nota", "Estado"]
     filas = [enc]
@@ -223,13 +282,13 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
         ])
     story += [tbl(filas, [3.0*inch, 0.8*inch, 0.8*inch, 1.0*inch]), Spacer(1, 14)]
 
-    # Carga horaria
+    # ── Carga horaria ──
     story.append(Paragraph(f"Carga Horaria - Ultimo Periodo ({ultimo_periodo})", ec))
     ch = [["Horas Presenciales / semana", "Horas Autonomas / semana"],
           [str(int(total_pres)), str(int(total_auto))]]
     story += [tbl(ch, [3.25*inch, 3.25*inch]), Spacer(1, 14)]
 
-    # Sugerencias
+    # ── Sugerencias ──
     if sugerencias:
         story.append(Paragraph("Proyecciones de Mejora (Ultimo Periodo)", ec))
         for s in sugerencias:
@@ -240,34 +299,23 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
             "Direccion Academica para generar una estrategia personalizada.", en))
         story.append(Spacer(1, 10))
 
-    # Estado académico
-    story.append(Paragraph("Estado Academico (P.A.P.A. Global)", ec))
-    if papa_global < 2.7:
-        story += [Paragraph("Estado: RIESGO ALTO", ea),
-                  Paragraph("Solicitar excepcionalidad ante el Consejo Superior "
-                             "Universitario. Acudir a Direccion Academica.", en)]
-    elif papa_global < 3.0:
-        story += [Paragraph("Estado: RIESGO MODERADO", en),
-                  Paragraph("Solicitar reingreso ante el Consejo de Facultad.", en)]
-    elif papa_global < 3.4:
-        story += [Paragraph("Estado: ZONA DE ALERTA", en),
-                  Paragraph("Visitar Direccion Academica para plan de mejora.", en)]
-    else:
-        story += [Paragraph("Estado: ZONA ESTABLE", eok),
-                  Paragraph("Asistir a Direccion Academica para fortalecer procesos.", en)]
-
     story += [
         Spacer(1, 16),
         HRFlowable(width="100%", thickness=1, color=borde),
         Spacer(1, 6),
         Paragraph(
-            "Documento generado por la Calculadora Academica - Direccion Academica",
+            "Documento generado por la Calculadora de P.A.P.A. - Direccion Academica",
             ef)
     ]
 
     doc.build(story)
     buffer.seek(0)
     return buffer
+
+
+# =============================================
+# APP PRINCIPAL
+# =============================================
 
 st.markdown("<div class='titulo-principal'>🎓 Calculadora Académica</div>",
             unsafe_allow_html=True)
@@ -556,7 +604,8 @@ st.caption("Reporte completo con P.A.P.A. por periodo, estado académico y suger
 
 pdf_buffer = generar_pdf(
     df, papa_global, papas_periodo, ultimo_periodo,
-    df_ultimo, sugerencias, total_pres, total_auto
+    df_ultimo, sugerencias, total_pres, total_auto,
+    estudiante_nombre, estudiante_cedula, estudiante_correo, estudiante_telefono
 )
 st.download_button(
     label="⬇️  Descargar Reporte PDF",
