@@ -496,7 +496,7 @@ for _, row in df_ultimo.iterrows():
                              "impacto leve 📌")
                     sugerencias.append(
                         f"Si subes **{row['Asignatura']}** de {nota_actual} a **{meta}** "
-                        f"→ Sería. **{round(nuevo_papa, 3)}** "
+                        f"→ **{round(nuevo_papa, 3)}** "
                         f"({signo}{diff} pts · {nivel})"
                     )
                     break
