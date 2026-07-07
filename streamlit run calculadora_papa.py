@@ -505,7 +505,7 @@ else:
 st.markdown("---")
 st.markdown("#### 🗺️ Plan de Acción")
 st.markdown(
-    "📄 Para más información ponte en contacto con [Acompañamiento Academico de Dirección Académica](https://lnk.bio/PROFESIONALES)."
+    "Para más información ponte en contacto con [Acompañamiento Académico de Dirección Académica](https://lnk.bio/PROFESIONALES)."
 )
 
 if papa_ultimo < 2.7:
