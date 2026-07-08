@@ -127,27 +127,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------------
-# DATOS DEL ESTUDIANTE
-# -----------------------------------
-st.markdown("## 👤 Datos del Estudiante")
-col_n, col_c, col_e, col_t = st.columns(4)
-with col_n:
-    estudiante_nombre = st.text_input("Nombre completo",
-                                      placeholder="Ej. María García López")
-with col_c:
-    estudiante_cedula = st.text_input("Cédula / Código estudiantil",
-                                      placeholder="Ej. 1234567890")
-with col_e:
-    estudiante_correo = st.text_input("Correo institucional",
-                                      placeholder="Ej. mgarcia@unal.edu.co")
-with col_t:
-    estudiante_telefono = st.text_input("Teléfono",
-                                        placeholder="Ej. 3001234567")
-
-st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-
-
-# -----------------------------------
 # FUNCIÓN PARA GENERAR PDF
 # -----------------------------------
 def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
@@ -319,16 +298,44 @@ def generar_pdf(df, papa_global, papas_periodo, ultimo_periodo,
 
 st.markdown("<div class='titulo-principal'>🎓 Calculadora Académica</div>",
             unsafe_allow_html=True)
-st.markdown("<div class='subtitulo'>P.A.P.A. por periodo y global</div>",
+st.markdown("<div class='subtitulo'>Conoce tu P.A.P.A. por periodo y global, "
+            "y descubre cómo va tu proceso académico</div>",
             unsafe_allow_html=True)
 st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+
+# -----------------------------------
+# DATOS DEL ESTUDIANTE
+# -----------------------------------
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+st.subheader("👤 Cuéntanos quién eres")
+st.caption("Estos datos aparecerán en tu reporte PDF. Puedes dejarlos en blanco si prefieres.")
+
+col_n, col_c = st.columns(2)
+with col_n:
+    estudiante_nombre = st.text_input("Nombre completo",
+                                      placeholder="Ej. María García López")
+with col_c:
+    estudiante_cedula = st.text_input("Cédula o código estudiantil",
+                                      placeholder="Ej. 1234567890")
+
+col_e, col_t = st.columns(2)
+with col_e:
+    estudiante_correo = st.text_input("Correo institucional",
+                                      placeholder="Ej. mgarcia@unal.edu.co")
+with col_t:
+    estudiante_telefono = st.text_input("Teléfono de contacto",
+                                        placeholder="Ej. 3001234567")
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 datos = []
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📚 Ingreso de Asignaturas")
+st.subheader("📚 Tus Asignaturas")
+st.caption("Ingresa las materias que has cursado con su nota, créditos y periodo. "
+           "Con esto calcularemos todo por ti.")
 
-num = st.number_input("¿Cuántas asignaturas deseas ingresar?",
+num = st.number_input("¿Cuántas asignaturas quieres ingresar?",
                       min_value=1, max_value=60, step=1, value=5)
 
 for i in range(int(num)):
@@ -368,7 +375,7 @@ st.markdown("</div>", unsafe_allow_html=True)
 
 datos_validos = [d for d in datos if d["Creditos"] > 0]
 if not datos_validos:
-    st.info("Ingresa al menos una asignatura para ver los resultados.")
+    st.info("✨ Ingresa al menos una asignatura y te mostraremos tus resultados al instante.")
     st.stop()
 
 df = pd.DataFrame(datos_validos)
@@ -401,7 +408,8 @@ total_pres  = int(df_ultimo["Horas Presenciales"].sum())
 total_auto  = int(df_ultimo["Horas Autonomas"].sum())
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📊 P.A.P.A. por Periodo")
+st.subheader("📊 Así va tu P.A.P.A. por Periodo")
+st.caption("Aquí puedes ver cómo ha evolucionado tu promedio a lo largo de tu carrera.")
 
 filas_periodo = []
 for p in periodos_ordenados:
@@ -430,7 +438,7 @@ st.metric("P.A.P.A. Global", papa_global,
 st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader(f"📋 Detalle — Último Periodo: {ultimo_periodo}")
+st.subheader(f"📋 Tu último periodo: {ultimo_periodo}")
 
 df_ult_vista = df_ultimo[["Asignatura", "Creditos", "Nota"]].copy()
 df_ult_vista.insert(3, "Estado", df_ult_vista["Nota"].apply(
@@ -444,8 +452,9 @@ st.metric(f"P.A.P.A. {ultimo_periodo}", papa_ultimo)
 st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader(f"⏰ Carga Horaria — {ultimo_periodo}")
-st.caption("Calculada únicamente con las asignaturas del último periodo inscrito.")
+st.subheader(f"⏰ Tu tiempo de estudio — {ultimo_periodo}")
+st.caption("Este es el tiempo semanal estimado que requiere tu carga académica actual. "
+           "Si sientes que no te alcanza el tiempo, en Acompañamiento Académico podemos ayudarte a organizarlo.")
 
 colA, colB, colC = st.columns(3)
 with colA:
@@ -458,28 +467,32 @@ with colC:
 st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📌 Estado Académico Global")
-st.caption("Basado en el P.A.P.A. acumulado de todos los periodos ingresados.")
+st.subheader("📌 ¿Cómo va tu proceso?")
+st.caption("Este estado se calcula con tu P.A.P.A. global, el de toda tu carrera.")
 
 if papa_global < 2.7:
     st.error(
-        "🔴 **Riesgo alto.** Puedes solicitar excepcionalidad ante el Consejo "
-        "Superior Universitario. Acércate a Dirección Académica para orientaciones."
+        "🔴 **Tu promedio necesita atención urgente, pero hay opciones.** "
+        "Una alternativa es solicitar excepcionalidad ante el Consejo Superior Universitario. "
+        "No estás solo/a en esto: acércate a **Dirección Académica** y te orientamos en el proceso."
     )
 elif papa_global < 3.0:
     st.warning(
-        "🟠 **Riesgo moderado.** Puedes solicitar reingreso ante el Consejo de "
-        "Facultad. Acércate a Dirección Académica para revisar fechas y orientaciones."
+        "🟠 **Estás pasando por un momento difícil, pero tiene salida.** "
+        "Una alternativa es solicitar reingreso ante el Consejo de Facultad. "
+        "En **Dirección Académica** te ayudamos a revisar fechas y requisitos."
     )
 elif papa_global < 3.4:
     st.info(
-        "🔵 **Zona de alerta.** Acércate a Dirección Académica para trazar "
-        "un plan que fortalezca las asignaturas con bajo rendimiento."
+        "🔵 **Vas aprobando, aunque con margen de mejora.** "
+        "Un pequeño esfuerzo en las materias correctas puede marcar la diferencia. "
+        "En **Dirección Académica** podemos ayudarte a armar un plan."
     )
 else:
     st.success(
-        "🟢 **Zona estable.** Puedes asistir a Dirección Académica para explorar "
-        "estrategias que potencien aún más tu rendimiento."
+        "🟢 **¡Tu promedio va muy bien!** Sigue así. "
+        "Y si quieres potenciarlo aún más, en **Dirección Académica** "
+        "encuentras estrategias y oportunidades para crecer."
     )
 
 st.markdown("</div>", unsafe_allow_html=True)
@@ -487,8 +500,8 @@ st.markdown("</div>", unsafe_allow_html=True)
 sugerencias = []
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader(f"💡 Sugerencias de Mejora — {ultimo_periodo}")
-st.caption("Las proyecciones se calculan únicamente con las asignaturas del último periodo inscrito.")
+st.subheader(f"💡 Ideas para mejorar — {ultimo_periodo}")
+st.caption("Estas sugerencias se basan en tu último periodo. Míralas como oportunidades, no como obligaciones.")
 
 en_riesgo  = df_ultimo[df_ultimo["Nota"] < 3.0]
 en_alerta  = df_ultimo[(df_ultimo["Nota"] >= 3.0) & (df_ultimo["Nota"] < 3.5)]
@@ -507,25 +520,25 @@ with col_s3:
 st.markdown("---")
 
 if not en_riesgo.empty:
-    st.error("#### 🔴 Asignaturas en riesgo")
+    st.error("#### 🔴 Materias que necesitan tu atención")
     for _, row in en_riesgo.iterrows():
         faltantes = round(3.0 - float(row["Nota"]), 1)
         st.markdown(
-            f"- ❌ **{row['Asignatura']}** — nota: `{row['Nota']}` · "
-            f"Te faltan **{faltantes} puntos** para aprobar."
+            f"- **{row['Asignatura']}** — nota actual: `{row['Nota']}` · "
+            f"Estás a **{faltantes} puntos** de aprobarla. ¡Aún puedes lograrlo!"
         )
 
 if not en_alerta.empty:
-    st.warning("#### 🟠 Asignaturas en alerta")
+    st.warning("#### 🟠 Materias que puedes fortalecer")
     for _, row in en_alerta.iterrows():
         mejora = round(3.5 - float(row["Nota"]), 1)
         st.markdown(
-            f"- ⚠️ **{row['Asignatura']}** — nota: `{row['Nota']}` · "
-            f"Con **{mejora} puntos más** llegarías a 3.5."
+            f"- **{row['Asignatura']}** — nota actual: `{row['Nota']}` · "
+            f"Con solo **{mejora} puntos más** llegas a 3.5 y proteges tu promedio."
         )
 
 st.markdown("---")
-st.info("#### 📈 Proyecciones de mejora del P.A.P.A.")
+st.info("#### 📈 ¿Y si subes una nota? Mira el impacto")
 
 for _, row in df_ultimo.iterrows():
     nota_actual = float(row["Nota"])
@@ -554,53 +567,53 @@ if sugerencias:
         st.markdown(f"- {s}")
     st.markdown("")
     st.markdown(
-        "> 📌 **Si no obtienes los resultados esperados con estas proyecciones, "
-        "busca ayuda en Dirección Académica para generar una estrategia "
-        "personalizada según tu situación académica.**"
+        "> 📌 **Si sientes que necesitas apoyo para lograrlo, en Dirección Académica "
+        "podemos construir contigo una estrategia a tu medida. No dudes en buscarnos.**"
     )
 else:
-    st.success("✅ El P.A.P.A. del último periodo está en zona sólida.")
+    st.success("✅ ¡Tu último periodo va muy bien! No hay ajustes urgentes que hacer.")
 
 st.markdown("---")
-st.markdown("#### 🗺️ Plan de Acción")
+st.markdown("#### 🗺️ Tu siguiente paso")
 st.markdown(
-    "Para más información ponte en contacto con [Acompañamiento Académico de Dirección Académica](https://lnk.bio/PROFESIONALES)."
+    "El equipo de [Acompañamiento Académico de Dirección Académica](https://lnk.bio/PROFESIONALES) "
+    "está para apoyarte. Agenda una cita cuando lo necesites."
 )
 
 if papa_ultimo < 2.7:
     st.error(
-        "**Situación crítica en el último periodo.** Acércate a **Dirección Académica** para:\n"
-        "- Conocer el proceso de solicitud de excepcionalidad.\n"
-        "- Identificar las asignaturas prioritarias a recuperar.\n"
-        "- Construir un plan semestre a semestre."
+        "**Tu último periodo fue difícil, y está bien pedir ayuda.** Juntos podemos:\n"
+        "- Revisar el proceso de solicitud de excepcionalidad.\n"
+        "- Identificar qué materias priorizar para recuperarte.\n"
+        "- Construir un plan realista, semestre a semestre."
     )
 elif papa_ultimo < 3.0:
     st.warning(
-        "**Situación de riesgo en el último periodo.** En **Dirección Académica** puedes:\n"
-        "- Orientarte sobre el proceso de reingreso si aplica.\n"
-        "- Diseñar un plan de mejora enfocado en las materias con mayor peso.\n"
-        "- Explorar estrategias de estudio y gestión del tiempo."
+        "**Este periodo fue retador, pero puedes darle la vuelta.** Te podemos acompañar a:\n"
+        "- Orientarte sobre el reingreso si llegara a aplicar.\n"
+        "- Enfocar tu esfuerzo en las materias con mayor peso en créditos.\n"
+        "- Encontrar estrategias de estudio y manejo del tiempo que te funcionen."
     )
 elif papa_ultimo < 3.4:
     st.info(
-        "**Zona de alerta en el último periodo.** En **Dirección Académica** puedes:\n"
-        "- Trazar un plan para subir el P.A.P.A. al menos a 3.5.\n"
-        "- Identificar asignaturas donde un pequeño esfuerzo genera mayor impacto.\n"
-        "- Acceder a tutorías o acompañamiento académico."
+        "**Vas bien encaminado/a, solo falta un empujón.** Podemos ayudarte a:\n"
+        "- Trazar un plan para llevar tu P.A.P.A. a 3.5 o más.\n"
+        "- Detectar dónde un pequeño esfuerzo genera el mayor impacto.\n"
+        "- Conectarte con tutorías y acompañamiento académico."
     )
 else:
     st.success(
-        "**Último periodo en zona estable.** Para mantenerlo:\n"
-        "- Prioriza las asignaturas en alerta antes de que afecten el promedio.\n"
-        "- Consulta en **Dirección Académica** estrategias para alcanzar un P.A.P.A. de 4.0 o más.\n"
-        "- Considera opciones como monitorias o semilleros de investigación."
+        "**¡Excelente periodo! Sigue construyendo sobre esto:**\n"
+        "- Cuida las materias en alerta antes de que afecten tu promedio.\n"
+        "- Pregunta por estrategias para alcanzar un P.A.P.A. de 4.0 o más.\n"
+        "- Explora oportunidades como monitorias o semilleros de investigación."
     )
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-st.subheader("📄 Exportar Reporte")
-st.caption("Reporte completo con P.A.P.A. por periodo, estado académico y sugerencias.")
+st.subheader("📄 Llévate tu reporte")
+st.caption("Descarga un PDF con todos tus resultados para guardarlo o compartirlo cuando lo necesites.")
 
 pdf_buffer = generar_pdf(
     df, papa_global, papas_periodo, ultimo_periodo,
@@ -621,27 +634,23 @@ st.markdown(
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-with st.expander("ℹ️ ¿Cómo se realizan los cálculos?"):
+with st.expander("ℹ️ ¿Quieres saber cómo calculamos todo?"):
     st.markdown("""
-    **P.A.P.A. por periodo:**
-    Σ(nota × créditos) / Σ(créditos) de cada periodo.
-
-    **P.A.P.A. Global:**
-    Σ(nota × créditos) / Σ(créditos) de todos los periodos ingresados.
-
-    **Sugerencias y horas:**
-    Se calculan únicamente con el último periodo ingresado
-    (el de mayor valor alfanumérico entre los periodos registrados).
-
-    **Estado académico:**
-    Se evalúa siempre sobre el P.A.P.A. global.
-
-    **Horas presenciales:** 1 hora semanal por crédito.
-    **Horas autónomas:** 2 horas semanales por crédito.
+    **Tu P.A.P.A.** se calcula multiplicando cada nota por sus créditos,
+    sumando todo y dividiendo entre el total de créditos. Así las materias
+    con más créditos pesan más en tu promedio.
 
     **Ejemplo:** (3,8×4 + 4,2×3 + 3,5×4 + 4,5×2 + 3,2×3) / 16 = **3,775**
 
-    > Para orientación personalizada acude a **Acompañamiento Académico**.
+    - El **P.A.P.A. por periodo** usa solo las materias de ese periodo.
+    - El **P.A.P.A. global** usa todas las materias que ingresaste.
+    - Las **sugerencias y horas de estudio** se basan en tu último periodo.
+    - Tu **estado académico** se evalúa con el P.A.P.A. global.
+
+    **Sobre las horas:** cada crédito equivale a 1 hora de clase y 2 horas
+    de trabajo autónomo a la semana.
+
+    > ¿Dudas? En **Acompañamiento Académico** te las resolvemos con gusto.
     """)
 
 st.markdown("""
